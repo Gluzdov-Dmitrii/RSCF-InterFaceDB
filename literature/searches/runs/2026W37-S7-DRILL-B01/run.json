@@ -1,0 +1,165 @@
+{
+  "search_run_id": "2026W37-S7-DRILL-B01",
+  "batch_id": "2026W37-S7-DRILL-B01",
+  "stream": "S7",
+  "question": "H7: dispersion and interfacial indicators mediate rheology, filtration, lubricity and damage better than MWCNT mass concentration alone",
+  "operator": "machine_lab_assistant",
+  "review_status": "machine_extracted",
+  "git_commit": "5276321a159bad307bed6b1ed69490902ece3cc6",
+  "prompt_version": "prompts/literature_search/weekly_literature_laboratory_ru.md v0.1",
+  "strategy_id": "scoping_v0_1",
+  "coverage_note": "No publication-year cutoff. Languages in scope: English (Russian queries not executed in this batch).",
+  "utc_created": "2026-09-05T10:16:14.187269+00:00",
+  "deduplication": [
+    "normalized_doi",
+    "normalized_title_year"
+  ],
+  "prisma_flow": {
+    "records_from_q4_openalex_total": 93,
+    "records_exported_all_queries": 290,
+    "records_with_doi": 286,
+    "unique_doi_in_exports": 274,
+    "unique_sources_screened": 43,
+    "include": 23,
+    "maybe": 9,
+    "exclude": 11,
+    "related_series_flagged": 1,
+    "evidence_items": 24
+  },
+  "limitations": [
+    "Crossref query and query.bibliographic do not implement Boolean AND; reported total-results are not true hit counts.",
+    "OpenAlex Q4 is the only query with a defensible subject-restricted count (n=93).",
+    "Sci-Hub was not used. Closed full texts were not ingested.",
+    "Quantitative extraction is limited to publisher/OpenAlex/Crossref abstracts or CC-BY HTML, not paywalled PDF tables."
+  ],
+  "queries": [
+    {
+      "qid": "Q1_crossref_mwcnt_drilling_outcomes",
+      "platform": "Crossref",
+      "endpoint": "https://api.crossref.org/works",
+      "query": "(MWCNT OR \"multi-walled carbon nanotube\") AND (\"drilling fluid\" OR \"drilling mud\") AND (rheology OR filtration OR lubricity OR stability)",
+      "filters": {
+        "sort": "relevance",
+        "order": "desc",
+        "rows": "40"
+      },
+      "url": "https://api.crossref.org/works?query.bibliographic=%28MWCNT+OR+%22multi-walled+carbon+nanotube%22%29+AND+%28%22drilling+fluid%22+OR+%22drilling+mud%22%29+AND+%28rheology+OR+filtration+OR+lubricity+OR+stability%29&rows=40&select=DOI%2Ctitle%2Cauthor%2Cissued%2Ccontainer-title%2Ctype%2Cabstract%2CURL%2Cpublisher%2Clicense%2Clink%2Cis-referenced-by-count%2CISSN%2Cprefix&sort=relevance&order=desc&mailto=literature%40interface-db.local",
+      "utc": "2026-09-05T10:04:48.195443+00:00",
+      "http_status": 200,
+      "total_results": 212565,
+      "exported": 40,
+      "path": "D:\\RSCF-InterFaceDB\\literature\\searches\\runs\\2026W37-S7-DRILL-B01\\raw\\Q1_crossref_mwcnt_drilling_outcomes.json"
+    },
+    {
+      "qid": "Q2_crossref_mwcnt_pickering_dispersion",
+      "platform": "Crossref",
+      "endpoint": "https://api.crossref.org/works",
+      "query": "(MWCNT OR CNT) AND (Pickering OR \"oil-water interface\" OR dispersion) AND (wettability OR surfactant OR salinity)",
+      "filters": {
+        "sort": "relevance",
+        "order": "desc",
+        "rows": "30"
+      },
+      "url": "https://api.crossref.org/works?query.bibliographic=%28MWCNT+OR+CNT%29+AND+%28Pickering+OR+%22oil-water+interface%22+OR+dispersion%29+AND+%28wettability+OR+surfactant+OR+salinity%29&rows=30&select=DOI%2Ctitle%2Cauthor%2Cissued%2Ccontainer-title%2Ctype%2Cabstract%2CURL%2Cpublisher%2Clicense%2Clink%2Cis-referenced-by-count%2CISSN%2Cprefix&sort=relevance&order=desc&mailto=literature%40interface-db.local",
+      "utc": "2026-09-05T10:04:50.464628+00:00",
+      "http_status": 200,
+      "total_results": 98587,
+      "exported": 30,
+      "path": "D:\\RSCF-InterFaceDB\\literature\\searches\\runs\\2026W37-S7-DRILL-B01\\raw\\Q2_crossref_mwcnt_pickering_dispersion.json"
+    },
+    {
+      "qid": "Q3_crossref_cnt_formation_damage",
+      "platform": "Crossref",
+      "endpoint": "https://api.crossref.org/works",
+      "query": "(MWCNT OR CNT) AND (\"drilling fluid\" OR \"drilling mud\") AND (formation damage OR plugging OR permeability OR \"core flooding\" OR lubricity)",
+      "filters": {
+        "sort": "relevance",
+        "order": "desc",
+        "rows": "30"
+      },
+      "url": "https://api.crossref.org/works?query.bibliographic=%28MWCNT+OR+CNT%29+AND+%28%22drilling+fluid%22+OR+%22drilling+mud%22%29+AND+%28formation+damage+OR+plugging+OR+permeability+OR+%22core+flooding%22+OR+lubricity%29&rows=30&select=DOI%2Ctitle%2Cauthor%2Cissued%2Ccontainer-title%2Ctype%2Cabstract%2CURL%2Cpublisher%2Clicense%2Clink%2Cis-referenced-by-count%2CISSN%2Cprefix&sort=relevance&order=desc&mailto=literature%40interface-db.local",
+      "utc": "2026-09-05T10:04:52.467474+00:00",
+      "http_status": 200,
+      "total_results": 107631,
+      "exported": 30,
+      "path": "D:\\RSCF-InterFaceDB\\literature\\searches\\runs\\2026W37-S7-DRILL-B01\\raw\\Q3_crossref_cnt_formation_damage.json"
+    },
+    {
+      "qid": "Q4_openalex_mwcnt_drilling",
+      "platform": "OpenAlex",
+      "endpoint": "https://api.openalex.org/works",
+      "query": "search=\"drilling fluid\" OR \"drilling mud\" | filter=title_and_abstract.search:\"multi-walled carbon nanotube\" OR MWCNT",
+      "filters": {
+        "sort": "relevance_score:desc",
+        "per-page": "50"
+      },
+      "url": "https://api.openalex.org/works?search=%22drilling+fluid%22+OR+%22drilling+mud%22&filter=title_and_abstract.search%3A%22multi-walled+carbon+nanotube%22+OR+MWCNT&per-page=50&sort=relevance_score%3Adesc&mailto=literature%40interface-db.local",
+      "utc": "2026-09-05T10:04:54.458960+00:00",
+      "http_status": 200,
+      "total_results": 93,
+      "exported": 50,
+      "path": "D:\\RSCF-InterFaceDB\\literature\\searches\\runs\\2026W37-S7-DRILL-B01\\raw\\Q4_openalex_mwcnt_drilling.json"
+    },
+    {
+      "qid": "Q5_openalex_pickering_mwcnt",
+      "platform": "OpenAlex",
+      "endpoint": "https://api.openalex.org/works",
+      "query": "search=Pickering OR wettability OR \"interfacial tension\" OR \"contact angle\" | filter=title_and_abstract.search:\"multi-walled carbon nanotube\" OR MWCNT",
+      "filters": {
+        "sort": "relevance_score:desc",
+        "per-page": "50"
+      },
+      "url": "https://api.openalex.org/works?search=Pickering+OR+wettability+OR+%22interfacial+tension%22+OR+%22contact+angle%22&filter=title_and_abstract.search%3A%22multi-walled+carbon+nanotube%22+OR+MWCNT&per-page=50&sort=relevance_score%3Adesc&mailto=literature%40interface-db.local",
+      "utc": "2026-09-05T10:05:40.350297+00:00",
+      "http_status": 200,
+      "total_results": 4368,
+      "exported": 50,
+      "path": "D:\\RSCF-InterFaceDB\\literature\\searches\\runs\\2026W37-S7-DRILL-B01\\raw\\Q5_openalex_pickering_mwcnt.json"
+    },
+    {
+      "qid": "Q6_openalex_formation_damage_cnt_fluid",
+      "platform": "OpenAlex",
+      "endpoint": "https://api.openalex.org/works",
+      "query": "search=\"formation damage\" OR plugging OR lubricity OR \"filter cake\" | filter=title_and_abstract.search:MWCNT OR nanotube OR \"carbon nanotube\"",
+      "filters": {
+        "sort": "relevance_score:desc",
+        "per-page": "50"
+      },
+      "url": "https://api.openalex.org/works?search=%22formation+damage%22+OR+plugging+OR+lubricity+OR+%22filter+cake%22&filter=title_and_abstract.search%3AMWCNT+OR+nanotube+OR+%22carbon+nanotube%22&per-page=50&sort=relevance_score%3Adesc&mailto=literature%40interface-db.local",
+      "utc": "2026-09-05T10:05:43.036188+00:00",
+      "http_status": 200,
+      "total_results": 1831,
+      "exported": 50,
+      "path": "D:\\RSCF-InterFaceDB\\literature\\searches\\runs\\2026W37-S7-DRILL-B01\\raw\\Q6_openalex_formation_damage_cnt_fluid.json"
+    },
+    {
+      "qid": "Q7_crossref_phrase_mwcnt_drilling_fluid",
+      "platform": "Crossref",
+      "endpoint": "https://api.crossref.org/works",
+      "query": "MWCNT \"drilling fluid\"",
+      "filters": {
+        "sort": "relevance",
+        "rows": "40",
+        "parameter": "query"
+      },
+      "url": "https://api.crossref.org/works?query=MWCNT+%22drilling+fluid%22&rows=40&select=DOI%2Ctitle%2Cauthor%2Cissued%2Ccontainer-title%2Ctype%2Cabstract%2CURL%2Cpublisher%2Clicense%2Clink%2Cis-referenced-by-count%2CISSN%2Cprefix&sort=relevance&order=desc&mailto=literature%40interface-db.local",
+      "utc": "2026-09-05T10:05:46.074050+00:00",
+      "http_status": 200,
+      "total_results": 624030,
+      "exported": 40,
+      "path": "D:\\RSCF-InterFaceDB\\literature\\searches\\runs\\2026W37-S7-DRILL-B01\\raw\\Q7_crossref_phrase_mwcnt_drilling_fluid.json"
+    }
+  ],
+  "sha256": {
+    "Q1_crossref_mwcnt_drilling_outcomes.json": "11b0abc8d02b64cf6a0c1cd57171d620bc626025aef56c422473b2dda6b85f4d",
+    "Q2_crossref_mwcnt_pickering_dispersion.json": "999d2efbef8cd840c43728d9149014659bb865c1bd8fa7a23c1f70f9b8124e98",
+    "Q3_crossref_cnt_formation_damage.json": "8c7b46165c4912b5fbbc8cf481682ac128d3a4f3579c26836490b7328e54d323",
+    "Q4_openalex_mwcnt_drilling.json": "02cb8ba4f3c3374271dda7d1b2c0ad0b942d7cdb949a4302053afdc9e219a101",
+    "Q5_openalex_pickering_mwcnt.json": "2902b8b3c0fb9489386f12b08d03c5c37ca828f6a5176992d107945c9fdf8bab",
+    "Q6_openalex_formation_damage_cnt_fluid.json": "f905f7c086d7901f4c1b9e035b29c63ab8c1d71a81dae664481b7695afd3c282",
+    "Q7_crossref_phrase_mwcnt_drilling_fluid.json": "26dccf7d34fd98587e5bb0a01111f04f3a5ef7e332ecd2c8252f7695b4bff52a",
+    "_query_meta.json": "1ec6dd6d6318976f80fe7117d8edcbfd53378104bbeaeff3de41c67e22e24748",
+    "_parsed_records.json": "ef78f3b34e1814612079b1d11ca160efffde536b02ce46bc0dc2a3feec276fdd",
+    "verified_records.json": "b1a4bd82361ee4e620295300ceab40ca118591a09c0afb77ff2709351166c5a1"
+  }
+}
