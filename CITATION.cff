@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this research software or a released dataset, cite the versioned release."
+title: "RSCF InterFaceDB"
+type: software
+authors:
+  - family-names: "Gluzdov"
+    given-names: "Dmitry"
+repository-code: "https://github.com/Gluzdov-Dmitrii/RSCF-InterFaceDB"
+version: "0.1.0"
+date-released: "2026-09-05"

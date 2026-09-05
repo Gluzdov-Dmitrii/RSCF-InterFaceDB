@@ -1,0 +1,17 @@
+---
+description: Python conventions for reproducible retrieval and data pipelines
+globs: "**/*.py"
+alwaysApply: false
+---
+
+# Python quality
+
+- Target Python 3.11 or newer and add type hints to public functions.
+- Use `pathlib.Path`, UTF-8, explicit time zones and deterministic ordering.
+- Use CLI arguments for input and output paths; never hard-code personal paths.
+- Refuse to overwrite outputs unless an explicit `--force` flag is supplied.
+- Log query parameters, source URLs, hashes, row counts and software version.
+- Raise actionable errors; do not swallow exceptions or silently drop records.
+- Keep network retrieval separate from parsing, normalization and validation.
+- Add tests for unit conversion, schema conditions, duplicates and malformed inputs.
+- Never log secrets, cookies, API keys or full confidential paths.

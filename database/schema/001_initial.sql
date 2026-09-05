@@ -1,0 +1,2536 @@
+-- InterFaceDB relational schema v0.2.0.
+-- SQLite is the reference implementation for the first curated release.
+-- One row in observation is exactly one reported, calculated, derived, or
+-- predicted result. Application and nanomaterial endpoints use the same table.
+
+PRAGMA foreign_keys = ON;
+
+BEGIN;
+
+CREATE TABLE schema_metadata (
+    schema_version TEXT PRIMARY KEY,
+    vocabulary_version TEXT NOT NULL,
+    applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+INSERT INTO schema_metadata (schema_version, vocabulary_version)
+VALUES ('0.2.0', '0.2.0');
+
+-- --------------------------------------------------------------------------
+-- Controlled vocabularies
+-- --------------------------------------------------------------------------
+
+CREATE TABLE entity_type_term (
+    entity_type TEXT PRIMARY KEY,
+    definition TEXT NOT NULL
+);
+
+INSERT INTO entity_type_term (entity_type, definition) VALUES
+    ('material', 'Chemical substance, polymer, petroleum material, mineral, mixture, or other reusable material identity.'),
+    ('material_lot', 'A physical supplier, laboratory, or field lot of a material.'),
+    ('nanomaterial_lot', 'A physical carbon nanomaterial lot with a defined production and functionalization history.'),
+    ('formulation', 'A nominal or measured composition made from material entities or lots.'),
+    ('phase_sample', 'A run-specific fluid or solid phase sample with a physical state and composition stage.'),
+    ('surface_specimen', 'A prepared solid surface specimen with crystallographic and history metadata.'),
+    ('dispersion_batch', 'A prepared dispersion batch linked to a formulation and preparation method.'),
+    ('core_sample', 'A porous-medium specimen or composite core model.'),
+    ('application_run', 'A drilling-fluid, filtration, lubricity, core-flow, or related application test run.');
+
+CREATE TABLE context_type_term (
+    context_type TEXT PRIMARY KEY,
+    definition TEXT NOT NULL
+);
+
+INSERT INTO context_type_term (context_type, definition) VALUES
+    ('liquid_gas_interface', 'A boundary between one liquid phase and one gas or vapour phase; supercritical fluids are excluded.'),
+    ('liquid_liquid_interface', 'A boundary between two distinct liquid phases.'),
+    ('liquid_solid_interface', 'A boundary between one liquid phase and one prepared solid surface.'),
+    ('three_phase_contact', 'A contact line comprising a solid surface, a probe phase, and an ambient phase.'),
+    ('bulk_fluid', 'A bulk formulation or phase sample outside an explicit interface.'),
+    ('nanomaterial_lot', 'A nanomaterial lot as the subject of characterization.'),
+    ('dispersion', 'A prepared nanomaterial dispersion as the subject of characterization.'),
+    ('filtration_test', 'A filtration run and its tested fluid, medium, and operating conditions.'),
+    ('lubricity_test', 'A lubricity run and its tested fluid and contact materials.'),
+    ('porous_media_flow', 'A core-flood or other porous-medium transport run.');
+
+CREATE TABLE participant_role_term (
+    participant_role TEXT PRIMARY KEY,
+    definition TEXT NOT NULL
+);
+
+INSERT INTO participant_role_term (participant_role, definition) VALUES
+    ('liquid_phase', 'The liquid phase in a two-participant liquid-gas or liquid-solid context.'),
+    ('gas_phase', 'The gas or vapour phase in a liquid-gas context; supercritical fluids are excluded.'),
+    ('liquid_phase_a', 'Canonical first liquid phase of a liquid-liquid interface.'),
+    ('liquid_phase_b', 'Canonical second liquid phase of a liquid-liquid interface.'),
+    ('solid_surface', 'Prepared solid surface participating in an interface or contact line.'),
+    ('probe_phase', 'Drop, bubble, or displaced phase used to establish a contact angle.'),
+    ('ambient_phase', 'Continuous phase surrounding the probe phase in a contact-angle measurement.'),
+    ('bulk_fluid', 'Bulk fluid, formulation, phase sample, or dispersion under test.'),
+    ('subject_nanomaterial_lot', 'Nanomaterial lot being characterized.'),
+    ('dispersion', 'Prepared dispersion being characterized.'),
+    ('application_run', 'Application test run to which an endpoint belongs.'),
+    ('porous_medium', 'Core or porous-medium specimen in a flow test.'),
+    ('formulation', 'Formulation associated with an application context.');
+
+CREATE TABLE origin_kind_term (
+    origin_kind TEXT PRIMARY KEY,
+    definition TEXT NOT NULL
+);
+
+INSERT INTO origin_kind_term (origin_kind, definition) VALUES
+    ('experiment', 'Direct laboratory or field measurement.'),
+    ('molecular_dynamics', 'Atomistic or coarse-grained molecular-dynamics calculation.'),
+    ('dft_qm', 'Density-functional-theory or other quantum-mechanical calculation.'),
+    ('cfd_lbm', 'Continuum, pore-scale, CFD, or lattice-Boltzmann calculation.'),
+    ('correlation', 'Published empirical or theoretical correlation evaluated at stated inputs.'),
+    ('ml_prediction', 'Prediction generated by a versioned machine-learning model run.'),
+    ('derived', 'Result calculated from one or more other observations by a recorded transformation.');
+
+CREATE TABLE composition_basis_term (
+    composition_basis TEXT PRIMARY KEY,
+    canonical_unit_code TEXT,
+    definition TEXT NOT NULL
+);
+
+INSERT INTO composition_basis_term (composition_basis, canonical_unit_code, definition) VALUES
+    ('mole_fraction', '1', 'Amount-of-substance fraction of the complete formulation.'),
+    ('mass_fraction', 'kg/kg', 'Mass fraction of the complete formulation.'),
+    ('volume_fraction', 'm3/m3', 'Volume fraction at stated temperature and pressure.'),
+    ('molality', 'mol/kg', 'Amount of solute per mass of solvent.'),
+    ('amount_concentration', 'mol/m3', 'Amount of solute per volume of solution.'),
+    ('mass_concentration', 'kg/m3', 'Mass of component per volume of solution.'),
+    ('parts_per_mass', 'kg/kg', 'Dimensionless parts-per-million/billion basis explicitly defined by mass.'),
+    ('parts_per_volume', 'm3/m3', 'Dimensionless parts-per-million/billion basis explicitly defined by volume.'),
+    ('mass_per_oilfield_barrel', 'kg/m3', 'Oilfield concentration reported as mass per barrel, including drilling-fluid ppb when explicitly defined as lb/bbl.'),
+    ('reported_other', NULL, 'Source-native basis retained because no defensible normalization is possible.');
+
+CREATE TABLE result_basis_term (
+    result_basis TEXT PRIMARY KEY,
+    definition TEXT NOT NULL
+);
+
+INSERT INTO result_basis_term (result_basis, definition) VALUES
+    ('dry_sorbent_mass', 'Result normalized by dry sorbent mass.'),
+    ('dry_core_mass', 'Result normalized by dry porous-medium or core mass.'),
+    ('initial_permeability', 'Change normalized by permeability before treatment.'),
+    ('ooip', 'Recovery normalized by original oil in place.'),
+    ('roip', 'Recovery normalized by residual oil in place at the start of the reported stage.'),
+    ('initial_fluid_in_place', 'Recovery normalized by another explicitly defined initial fluid amount.'),
+    ('initial_dispersed_component_mass', 'Fraction normalized by the initial mass of the explicitly identified dispersed component.'),
+    ('analyzed_interfacial_area', 'Coverage normalized by the total interface area included in the stated segmentation analysis.'),
+    ('initial_sample_volume', 'Separated volume normalized by the initial sample volume.'),
+    ('as_received_sample_mass', 'Composition normalized by mass of the as-received nanomaterial sample.'),
+    ('dry_sample_mass', 'Composition normalized by dry sample mass under the stated drying protocol.'),
+    ('total_detected_atoms', 'Atomic fraction normalized by all atoms included in the stated surface-analysis quantification.'),
+    ('dry_nanotube_mass', 'Amount of an identified functional group normalized by dry nanotube mass.'),
+    ('method_defined', 'Dimensionless normalization fully defined by the named method or standard.');
+
+CREATE TABLE condition_term (
+    condition_term_id TEXT PRIMARY KEY,
+    canonical_unit_code TEXT,
+    dimension_code TEXT NOT NULL,
+    definition TEXT NOT NULL
+);
+
+INSERT INTO condition_term (condition_term_id, canonical_unit_code, dimension_code, definition) VALUES
+    ('temperature', 'K', 'temperature', 'Thermodynamic temperature of measurement or calculation.'),
+    ('pressure_absolute', 'Pa', 'pressure', 'Absolute pressure; gauge values require a recorded conversion and reference.'),
+    ('confining_pressure', 'Pa', 'pressure', 'Confining pressure applied to a porous-medium specimen.'),
+    ('pH', '1', 'dimensionless', 'Reported pH together with its scale, method, phase, and temperature.'),
+    ('ionic_strength', 'mol/kg', 'molality', 'Molality-based ionic strength.'),
+    ('salinity_mass_fraction', 'kg/kg', 'mass_fraction', 'Total dissolved-solids or explicitly defined salt mass fraction.'),
+    ('component_concentration', NULL, 'basis_dependent_concentration', 'Concentration of the entity identified by condition_value.applies_to_entity_id; basis_or_scale and the series-specific canonical unit are mandatory.'),
+    ('relative_centrifugal_force', '1', 'acceleration_ratio', 'Centrifugal acceleration divided by standard gravitational acceleration.'),
+    ('centrifugation_time', 's', 'time', 'Duration at the stated relative centrifugal force.'),
+    ('surface_age', 's', 'time', 'Time since the operational creation of an interface.'),
+    ('equilibration_time', 's', 'time', 'Duration allowed for equilibration before acquisition.'),
+    ('sample_age', 's', 'time', 'Age of a prepared sample at acquisition.'),
+    ('storage_time', 's', 'time', 'Storage or thermal-aging duration.'),
+    ('rest_time', 's', 'time', 'Rest duration preceding a gel-strength measurement.'),
+    ('filtration_time', 's', 'time', 'Elapsed time of a filtration measurement.'),
+    ('shear_rate', '1/s', 'reciprocal_time', 'Applied shear rate.'),
+    ('frequency', 'Hz', 'frequency', 'Oscillation frequency.'),
+    ('strain', '1', 'dimensionless', 'Applied strain amplitude.'),
+    ('flow_rate', 'm3/s', 'volume_flow_rate', 'Volumetric flow rate.'),
+    ('superficial_velocity', 'm/s', 'velocity', 'Flow rate divided by total cross-sectional area.'),
+    ('interstitial_velocity', 'm/s', 'velocity', 'Pore-space velocity under the stated porosity and saturation convention.'),
+    ('pore_volume_injected', '1', 'dimensionless', 'Injected volume divided by the stated pore volume.'),
+    ('relative_humidity', '1', 'dimensionless', 'Relative humidity as a fraction.');
+
+CREATE TABLE method_parameter_term (
+    parameter_term TEXT PRIMARY KEY,
+    canonical_unit_code TEXT,
+    value_kind TEXT NOT NULL CHECK (value_kind IN ('numeric', 'text', 'controlled_text')),
+    definition TEXT NOT NULL
+);
+
+INSERT INTO method_parameter_term
+    (parameter_term, canonical_unit_code, value_kind, definition)
+VALUES
+    ('population_statistic', NULL, 'controlled_text', 'Population statistic represented by the result, for example number mean, median, mode or percentile.'),
+    ('raman_excitation_wavelength', 'm', 'numeric', 'Vacuum wavelength of the Raman excitation laser.'),
+    ('spectral_fitting_convention', NULL, 'text', 'Baseline, band model, fit range and intensity convention used for a spectral ratio.'),
+    ('rheological_model', NULL, 'controlled_text', 'Constitutive model or standardized calculation used for a rheological parameter.'),
+    ('stability_fraction_definition', NULL, 'text', 'Operational boundary, sampling position and assay defining the retained or sedimented fraction.'),
+    ('size_analysis_protocol', NULL, 'text', 'Instrument mode, inversion or segmentation procedure and weighting basis used for size analysis.'),
+    ('coverage_segmentation_protocol', NULL, 'text', 'Image or simulation segmentation rule used to classify covered interfacial area.'),
+    ('emulsion_droplet_analysis_protocol', NULL, 'text', 'Sampling, imaging and segmentation protocol used to obtain the droplet-size distribution.'),
+    ('purity_assay', NULL, 'text', 'Analytical method and calculation used to quantify CNT purity.'),
+    ('ash_assay', NULL, 'text', 'TGA or other protocol used to define and quantify ash residue.'),
+    ('functionalization_assay', NULL, 'text', 'Surface-analysis, titration or thermal method used to quantify functionalization.'),
+    ('standard_or_protocol', NULL, 'text', 'Named standard and version or a sufficiently specified laboratory protocol.'),
+    ('reported_other', NULL, 'text', 'Versioned extension parameter not yet assigned a dedicated controlled term.');
+
+CREATE TABLE method_parameter_value_term (
+    parameter_term TEXT NOT NULL REFERENCES method_parameter_term(parameter_term),
+    value_term TEXT NOT NULL,
+    definition TEXT NOT NULL,
+    PRIMARY KEY (parameter_term, value_term)
+) STRICT;
+
+INSERT INTO method_parameter_value_term (parameter_term, value_term, definition) VALUES
+    ('population_statistic', 'arithmetic_mean', 'Arithmetic mean over individual objects.'),
+    ('population_statistic', 'median', 'Median over individual objects.'),
+    ('population_statistic', 'mode', 'Mode of the stated fitted or binned distribution.'),
+    ('population_statistic', 'percentile', 'Explicitly identified percentile.'),
+    ('population_statistic', 'mean_of_individual_ratios', 'Mean of length-to-diameter ratios computed for paired individual objects.'),
+    ('population_statistic', 'ratio_of_population_means', 'Ratio of separately estimated population mean length and diameter.'),
+    ('rheological_model', 'bingham_plastic', 'Bingham-plastic constitutive model.'),
+    ('rheological_model', 'herschel_bulkley', 'Herschel-Bulkley constitutive model.'),
+    ('rheological_model', 'casson', 'Casson constitutive model.'),
+    ('rheological_model', 'api_dial_calculation', 'Oilfield dial-reading calculation under a stated API or equivalent protocol.'),
+    ('rheological_model', 'other_named_model', 'Another explicitly named model retained in value_original_text.');
+
+CREATE TABLE property_term (
+    property_id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    definition TEXT NOT NULL,
+    canonical_unit_code TEXT NOT NULL,
+    dimension_code TEXT NOT NULL,
+    required_coordinate_term TEXT REFERENCES condition_term(condition_term_id),
+    canonical_min REAL,
+    min_inclusive INTEGER NOT NULL DEFAULT 1 CHECK (min_inclusive IN (0, 1)),
+    canonical_max REAL,
+    max_inclusive INTEGER NOT NULL DEFAULT 1 CHECK (max_inclusive IN (0, 1)),
+    active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
+    model_ready_allowed INTEGER NOT NULL DEFAULT 1 CHECK (model_ready_allowed IN (0, 1)),
+    model_ready_block_reason TEXT,
+    UNIQUE (property_id, canonical_unit_code),
+    CHECK (canonical_min IS NULL OR canonical_max IS NULL OR canonical_min <= canonical_max),
+    CHECK (model_ready_allowed = 1 OR model_ready_block_reason IS NOT NULL)
+) STRICT;
+
+INSERT INTO property_term
+    (property_id, label, definition, canonical_unit_code, dimension_code,
+     required_coordinate_term, canonical_min, min_inclusive, canonical_max, max_inclusive)
+VALUES
+    ('surface_tension_equilibrium', 'Equilibrium surface tension', 'Equilibrium tension of a liquid-gas interface.', 'N/m', 'surface_tension', NULL, 0, 1, NULL, 1),
+    ('surface_tension_dynamic', 'Dynamic surface tension', 'Surface tension at a defined surface age after interface creation.', 'N/m', 'surface_tension', 'surface_age', 0, 1, NULL, 1),
+    ('interfacial_tension_equilibrium', 'Equilibrium interfacial tension', 'Equilibrium tension between two distinct liquid phases.', 'N/m', 'surface_tension', NULL, 0, 1, NULL, 1),
+    ('interfacial_tension_dynamic', 'Dynamic interfacial tension', 'Liquid-liquid interfacial tension at a defined surface age.', 'N/m', 'surface_tension', 'surface_age', 0, 1, NULL, 1),
+    ('contact_angle_static', 'Static contact angle', 'Apparent static contact angle measured through the explicitly identified phase.', 'deg', 'plane_angle', NULL, 0, 1, 180, 1),
+    ('contact_angle_advancing', 'Advancing contact angle', 'Apparent advancing contact angle measured through the explicitly identified phase.', 'deg', 'plane_angle', NULL, 0, 1, 180, 1),
+    ('contact_angle_receding', 'Receding contact angle', 'Apparent receding contact angle measured through the explicitly identified phase.', 'deg', 'plane_angle', NULL, 0, 1, 180, 1),
+    ('adsorption_amount_static', 'Equilibrium adsorption loading', 'Directly observed equilibrium mass of an identified adsorbate per dry sorbent mass at a stated equilibrium fluid concentration; fitted capacity and area-normalized excess are different terms.', 'kg/kg', 'mass_ratio', NULL, 0, 1, NULL, 1),
+    ('adsorption_retention_dynamic', 'Deprecated dynamic adsorption retention', 'Deprecated mechanism-ambiguous legacy term; use porous_media_retained_mass_dynamic unless adsorption is independently demonstrated.', 'kg/kg', 'mass_ratio', NULL, 0, 1, NULL, 1),
+    ('interfacial_layer_thickness', 'Interfacial layer thickness', 'Thickness of an operationally defined interfacial or adsorbed layer.', 'm', 'length', NULL, 0, 0, NULL, 1),
+    ('dispersion_stability_index', 'Dispersion stability index', 'Method-defined dimensionless stability index; values are comparable only for compatible protocols.', '1', 'dimensionless', NULL, NULL, 1, NULL, 1),
+    ('zeta_potential', 'Zeta potential', 'Electrokinetic zeta potential of a specified dispersion and medium.', 'V', 'electric_potential', NULL, NULL, 1, NULL, 1),
+    ('aggregate_size_apparent', 'Apparent aggregate size', 'Method-dependent apparent size of aggregates or agglomerates in a specified dispersion.', 'm', 'length', NULL, 0, 0, NULL, 1),
+    ('apparent_viscosity', 'Apparent viscosity', 'Bulk apparent dynamic viscosity at a defined shear rate.', 'Pa.s', 'dynamic_viscosity', 'shear_rate', 0, 0, NULL, 1),
+    ('plastic_viscosity', 'Plastic viscosity', 'Plastic viscosity obtained from a stated rheological model or standard.', 'Pa.s', 'dynamic_viscosity', NULL, 0, 1, NULL, 1),
+    ('yield_point', 'Generic yield point', 'Legacy generic rheological yield measure; retained for staging/curation but not commensurate enough for model-ready data.', 'Pa', 'rheological_yield_measure', NULL, 0, 1, NULL, 1),
+    ('gel_strength', 'Gel strength', 'Gel strength after a defined rest time and protocol.', 'Pa', 'shear_stress', 'rest_time', 0, 1, NULL, 1),
+    ('hpht_filtrate_volume', 'HPHT filtrate volume', 'Cumulative filtrate volume in a defined HPHT filtration test.', 'm3', 'volume', 'filtration_time', 0, 1, NULL, 1),
+    ('filter_cake_thickness', 'Filter cake thickness', 'Thickness of a filter cake after a defined filtration protocol.', 'm', 'length', NULL, 0, 1, NULL, 1),
+    ('lubricity_coefficient', 'Lubricity coefficient', 'Dimensionless coefficient from a stated lubricity geometry and protocol.', '1', 'dimensionless', NULL, 0, 1, NULL, 1),
+    ('permeability_impairment', 'Permeability impairment', 'Fractional loss (k_before - k_after) / k_before; negative values denote improvement.', '1', 'dimensionless', NULL, NULL, 1, 1, 1),
+    ('recovery_factor', 'Recovery factor', 'Recovered target fluid divided by the explicitly stated initial or residual in-place basis.', '1', 'dimensionless', NULL, 0, 1, 1, 1),
+    ('bet_surface_area', 'BET specific surface area', 'Specific surface area determined by a stated BET protocol.', 'm2/kg', 'area_per_mass', NULL, 0, 0, NULL, 1),
+    ('raman_id_ig', 'Raman ID to IG ratio', 'Raman D-band to G-band intensity ratio at a stated excitation wavelength and fitting convention.', '1', 'dimensionless', NULL, 0, 1, NULL, 1),
+    ('cnt_outer_diameter', 'CNT outer diameter', 'Outer-diameter statistic of a CNT population with the statistic and characterization method reported.', 'm', 'length', NULL, 0, 0, NULL, 1),
+    ('cnt_length', 'CNT length', 'Length statistic of a CNT population with the statistic and characterization method reported.', 'm', 'length', NULL, 0, 0, NULL, 1),
+    ('porous_media_retained_mass_dynamic', 'Porous-media retained mass', 'Net mass of an identified material retained per dry porous-medium mass during a stated transport experiment, without assigning adsorption, deposition, straining or plugging mechanism.', 'kg/kg', 'mass_ratio', NULL, 0, 1, NULL, 1),
+    ('sedimentation_supernatant_mass_fraction', 'Sedimentation supernatant mass fraction', 'Mass fraction of an identified initially dispersed component remaining in a defined supernatant region after gravitational storage for the stated time.', '1', 'mass_fraction', 'storage_time', 0, 1, 1, 1),
+    ('centrifugation_supernatant_mass_fraction', 'Centrifugation supernatant mass fraction', 'Mass fraction of an identified initially dispersed component remaining in the operationally defined supernatant after stated relative centrifugal force and duration.', '1', 'mass_fraction', NULL, 0, 1, 1, 1),
+    ('dls_hydrodynamic_diameter_z_average', 'DLS hydrodynamic z-average diameter', 'ISO cumulants z-average hydrodynamic diameter reported by dynamic light scattering for the specified dispersion.', 'm', 'length', NULL, 0, 0, NULL, 1),
+    ('image_aggregate_equivalent_diameter', 'Image-derived aggregate equivalent diameter', 'Equivalent-circle diameter of segmented CNT aggregates or agglomerates under a stated imaging and segmentation protocol.', 'm', 'length', NULL, 0, 0, NULL, 1),
+    ('interfacial_coverage_fraction', 'Interfacial coverage fraction', 'Projected fraction of an explicitly identified liquid-liquid interface classified as covered by the identified material under a stated segmentation rule.', '1', 'area_fraction', NULL, 0, 1, 1, 1),
+    ('emulsion_droplet_diameter_d32', 'Emulsion Sauter mean droplet diameter', 'Surface-area-weighted Sauter mean diameter D[3,2] of an emulsion droplet population.', 'm', 'length', NULL, 0, 0, NULL, 1),
+    ('emulsion_separated_volume_fraction', 'Emulsion separated volume fraction', 'Macroscopic separated-phase volume divided by initial emulsion sample volume after the stated storage time.', '1', 'volume_fraction', 'storage_time', 0, 1, 1, 1),
+    ('oscillatory_storage_modulus', 'Oscillatory storage modulus', 'Linear-viscoelastic storage modulus G prime at the stated angular frequency or frequency and strain amplitude.', 'Pa', 'shear_modulus', 'frequency', 0, 1, NULL, 1),
+    ('oscillatory_loss_modulus', 'Oscillatory loss modulus', 'Linear-viscoelastic loss modulus G double prime at the stated angular frequency or frequency and strain amplitude.', 'Pa', 'shear_modulus', 'frequency', 0, 1, NULL, 1),
+    ('yield_stress_herschel_bulkley', 'Herschel-Bulkley yield stress', 'Yield-stress parameter from a stated Herschel-Bulkley fit and fit domain.', 'Pa', 'shear_stress', NULL, 0, 1, NULL, 1),
+    ('oilfield_yield_point_api', 'Oilfield yield point', 'Oilfield yield point calculated from viscometer readings under an identified API or equivalent standard and converted to pascals.', 'Pa', 'shear_stress', NULL, 0, 1, NULL, 1),
+    ('cnt_purity_mass_fraction', 'CNT purity mass fraction', 'Assay-defined CNT fraction of the as-received nanomaterial sample by mass.', '1', 'mass_fraction', NULL, 0, 1, 1, 1),
+    ('cnt_ash_mass_fraction', 'CNT ash mass fraction', 'Residual ash mass fraction of a dry nanomaterial sample under the stated thermal protocol.', '1', 'mass_fraction', NULL, 0, 1, 1, 1),
+    ('cnt_surface_oxygen_atomic_fraction', 'CNT surface oxygen atomic fraction', 'XPS-derived oxygen atomic fraction among all quantified surface atoms under the stated quantification protocol.', '1', 'atomic_fraction', NULL, 0, 1, 1, 1),
+    ('cnt_functional_group_amount', 'CNT functional-group amount', 'Amount of an explicitly identified surface functional group per dry nanotube mass under a stated assay.', 'mol/kg', 'amount_per_mass', NULL, 0, 1, NULL, 1),
+    ('cnt_aspect_ratio', 'CNT aspect ratio', 'Population statistic of CNT length divided by outer diameter, with pairing and weighting convention reported.', '1', 'dimensionless', NULL, 0, 0, NULL, 1);
+
+UPDATE property_term
+SET active = 0,
+    model_ready_allowed = 0,
+    model_ready_block_reason = 'Deprecated mechanism-ambiguous ID; migrate to porous_media_retained_mass_dynamic.'
+WHERE property_id = 'adsorption_retention_dynamic';
+
+UPDATE property_term
+SET model_ready_allowed = 0,
+    model_ready_block_reason = 'Generic protocol-dependent measurand is not commensurate across methods; use a specific property term.'
+WHERE property_id IN ('dispersion_stability_index', 'aggregate_size_apparent', 'yield_point');
+
+CREATE TABLE property_context_rule (
+    property_id TEXT NOT NULL REFERENCES property_term(property_id),
+    context_type TEXT NOT NULL REFERENCES context_type_term(context_type),
+    PRIMARY KEY (property_id, context_type)
+);
+
+INSERT INTO property_context_rule (property_id, context_type) VALUES
+    ('surface_tension_equilibrium', 'liquid_gas_interface'),
+    ('surface_tension_dynamic', 'liquid_gas_interface'),
+    ('interfacial_tension_equilibrium', 'liquid_liquid_interface'),
+    ('interfacial_tension_dynamic', 'liquid_liquid_interface'),
+    ('contact_angle_static', 'three_phase_contact'),
+    ('contact_angle_advancing', 'three_phase_contact'),
+    ('contact_angle_receding', 'three_phase_contact'),
+    ('adsorption_amount_static', 'liquid_solid_interface'),
+    ('adsorption_retention_dynamic', 'porous_media_flow'),
+    ('interfacial_layer_thickness', 'liquid_gas_interface'),
+    ('interfacial_layer_thickness', 'liquid_liquid_interface'),
+    ('interfacial_layer_thickness', 'liquid_solid_interface'),
+    ('dispersion_stability_index', 'dispersion'),
+    ('zeta_potential', 'dispersion'),
+    ('aggregate_size_apparent', 'dispersion'),
+    ('apparent_viscosity', 'bulk_fluid'),
+    ('apparent_viscosity', 'dispersion'),
+    ('plastic_viscosity', 'bulk_fluid'),
+    ('plastic_viscosity', 'dispersion'),
+    ('yield_point', 'bulk_fluid'),
+    ('yield_point', 'dispersion'),
+    ('gel_strength', 'bulk_fluid'),
+    ('gel_strength', 'dispersion'),
+    ('hpht_filtrate_volume', 'filtration_test'),
+    ('filter_cake_thickness', 'filtration_test'),
+    ('lubricity_coefficient', 'lubricity_test'),
+    ('permeability_impairment', 'porous_media_flow'),
+    ('recovery_factor', 'porous_media_flow'),
+    ('bet_surface_area', 'nanomaterial_lot'),
+    ('raman_id_ig', 'nanomaterial_lot'),
+    ('cnt_outer_diameter', 'nanomaterial_lot'),
+    ('cnt_length', 'nanomaterial_lot'),
+    ('porous_media_retained_mass_dynamic', 'porous_media_flow'),
+    ('sedimentation_supernatant_mass_fraction', 'dispersion'),
+    ('centrifugation_supernatant_mass_fraction', 'dispersion'),
+    ('dls_hydrodynamic_diameter_z_average', 'dispersion'),
+    ('image_aggregate_equivalent_diameter', 'dispersion'),
+    ('interfacial_coverage_fraction', 'liquid_liquid_interface'),
+    ('emulsion_droplet_diameter_d32', 'bulk_fluid'),
+    ('emulsion_separated_volume_fraction', 'bulk_fluid'),
+    ('oscillatory_storage_modulus', 'bulk_fluid'),
+    ('oscillatory_storage_modulus', 'dispersion'),
+    ('oscillatory_loss_modulus', 'bulk_fluid'),
+    ('oscillatory_loss_modulus', 'dispersion'),
+    ('yield_stress_herschel_bulkley', 'bulk_fluid'),
+    ('yield_stress_herschel_bulkley', 'dispersion'),
+    ('oilfield_yield_point_api', 'bulk_fluid'),
+    ('oilfield_yield_point_api', 'dispersion'),
+    ('cnt_purity_mass_fraction', 'nanomaterial_lot'),
+    ('cnt_ash_mass_fraction', 'nanomaterial_lot'),
+    ('cnt_surface_oxygen_atomic_fraction', 'nanomaterial_lot'),
+    ('cnt_functional_group_amount', 'nanomaterial_lot'),
+    ('cnt_aspect_ratio', 'nanomaterial_lot');
+
+CREATE TABLE property_condition_requirement (
+    property_id TEXT NOT NULL REFERENCES property_term(property_id),
+    condition_term_id TEXT NOT NULL REFERENCES condition_term(condition_term_id),
+    required_for_state TEXT NOT NULL CHECK (required_for_state IN ('curated', 'model_ready')),
+    target_entity_required INTEGER NOT NULL DEFAULT 0 CHECK (target_entity_required IN (0, 1)),
+    basis_required INTEGER NOT NULL DEFAULT 0 CHECK (basis_required IN (0, 1)),
+    rationale TEXT NOT NULL,
+    PRIMARY KEY (property_id, condition_term_id)
+) STRICT;
+
+INSERT INTO property_condition_requirement
+    (property_id, condition_term_id, required_for_state,
+     target_entity_required, basis_required, rationale)
+VALUES
+    ('adsorption_amount_static', 'component_concentration', 'curated', 1, 1, 'Equilibrium loading is undefined without equilibrium adsorbate concentration and basis.'),
+    ('centrifugation_supernatant_mass_fraction', 'relative_centrifugal_force', 'curated', 0, 0, 'Centrifugation outcome depends on applied acceleration.'),
+    ('centrifugation_supernatant_mass_fraction', 'centrifugation_time', 'curated', 0, 0, 'Centrifugation outcome depends on duration.'),
+    ('oscillatory_storage_modulus', 'strain', 'curated', 0, 0, 'Oscillatory modulus requires strain amplitude and regime.'),
+    ('oscillatory_loss_modulus', 'strain', 'curated', 0, 0, 'Oscillatory modulus requires strain amplitude and regime.');
+
+CREATE TABLE property_method_parameter_requirement (
+    property_id TEXT NOT NULL REFERENCES property_term(property_id),
+    parameter_term TEXT NOT NULL REFERENCES method_parameter_term(parameter_term),
+    required_for_state TEXT NOT NULL CHECK (required_for_state IN ('curated', 'model_ready')),
+    rationale TEXT NOT NULL,
+    PRIMARY KEY (property_id, parameter_term)
+) STRICT;
+
+INSERT INTO property_method_parameter_requirement
+    (property_id, parameter_term, required_for_state, rationale)
+VALUES
+    ('raman_id_ig', 'raman_excitation_wavelength', 'curated', 'ID/IG depends on excitation wavelength.'),
+    ('raman_id_ig', 'spectral_fitting_convention', 'curated', 'ID/IG depends on baseline and band-fitting convention.'),
+    ('cnt_outer_diameter', 'population_statistic', 'curated', 'A population size result requires its statistic.'),
+    ('cnt_length', 'population_statistic', 'curated', 'A population size result requires its statistic.'),
+    ('cnt_aspect_ratio', 'population_statistic', 'curated', 'Aspect ratio requires population weighting and pairing convention.'),
+    ('plastic_viscosity', 'rheological_model', 'model_ready', 'Plastic viscosity is model or standard dependent.'),
+    ('gel_strength', 'standard_or_protocol', 'model_ready', 'Gel strength requires an operational test protocol.'),
+    ('sedimentation_supernatant_mass_fraction', 'stability_fraction_definition', 'curated', 'The sampled supernatant boundary and mass assay must be defined.'),
+    ('centrifugation_supernatant_mass_fraction', 'stability_fraction_definition', 'curated', 'The sampled supernatant boundary and mass assay must be defined.'),
+    ('dls_hydrodynamic_diameter_z_average', 'size_analysis_protocol', 'curated', 'DLS analysis settings and cumulants convention must be stated.'),
+    ('image_aggregate_equivalent_diameter', 'size_analysis_protocol', 'curated', 'Image segmentation and sampling protocol must be stated.'),
+    ('image_aggregate_equivalent_diameter', 'population_statistic', 'curated', 'An image-derived population result requires its aggregation statistic.'),
+    ('interfacial_coverage_fraction', 'coverage_segmentation_protocol', 'curated', 'Coverage depends on segmentation and analyzed area.'),
+    ('emulsion_droplet_diameter_d32', 'emulsion_droplet_analysis_protocol', 'curated', 'D[3,2] requires a validated droplet distribution protocol.'),
+    ('yield_stress_herschel_bulkley', 'rheological_model', 'curated', 'The fit must explicitly identify the Herschel-Bulkley model and domain.'),
+    ('oilfield_yield_point_api', 'standard_or_protocol', 'curated', 'Oilfield yield point requires the named calculation standard/version.'),
+    ('cnt_purity_mass_fraction', 'purity_assay', 'curated', 'Purity is assay-defined.'),
+    ('cnt_ash_mass_fraction', 'ash_assay', 'curated', 'Ash fraction is thermal-protocol dependent.'),
+    ('cnt_surface_oxygen_atomic_fraction', 'functionalization_assay', 'curated', 'Atomic fractions require an XPS quantification protocol.'),
+    ('cnt_functional_group_amount', 'functionalization_assay', 'curated', 'Functional-group amount requires a selective quantitative assay.');
+
+CREATE TABLE property_result_basis_rule (
+    property_id TEXT NOT NULL REFERENCES property_term(property_id),
+    result_basis TEXT NOT NULL REFERENCES result_basis_term(result_basis),
+    measurand_entity_required INTEGER NOT NULL DEFAULT 0 CHECK (measurand_entity_required IN (0, 1)),
+    required_for_state TEXT NOT NULL CHECK (required_for_state IN ('curated', 'model_ready')),
+    rationale TEXT NOT NULL,
+    PRIMARY KEY (property_id, result_basis)
+) STRICT;
+
+INSERT INTO property_result_basis_rule
+    (property_id, result_basis, measurand_entity_required, required_for_state, rationale)
+VALUES
+    ('adsorption_amount_static', 'dry_sorbent_mass', 1, 'curated', 'Identify adsorbate and dry-sorbent normalization.'),
+    ('porous_media_retained_mass_dynamic', 'dry_core_mass', 1, 'curated', 'Identify retained material and dry-core normalization.'),
+    ('permeability_impairment', 'initial_permeability', 0, 'curated', 'Fractional loss is normalized by pretreatment permeability.'),
+    ('recovery_factor', 'ooip', 1, 'curated', 'Identify recovered fluid and original-oil basis.'),
+    ('recovery_factor', 'roip', 1, 'curated', 'Identify recovered fluid and residual-oil basis.'),
+    ('recovery_factor', 'initial_fluid_in_place', 1, 'curated', 'Identify recovered fluid and in-place basis.'),
+    ('sedimentation_supernatant_mass_fraction', 'initial_dispersed_component_mass', 1, 'curated', 'Normalize identified suspended component by its initial mass.'),
+    ('centrifugation_supernatant_mass_fraction', 'initial_dispersed_component_mass', 1, 'curated', 'Normalize identified suspended component by its initial mass.'),
+    ('interfacial_coverage_fraction', 'analyzed_interfacial_area', 1, 'curated', 'Identify covering material and analyzed interface denominator.'),
+    ('emulsion_separated_volume_fraction', 'initial_sample_volume', 0, 'curated', 'Normalize separated phase by initial sample volume.'),
+    ('cnt_purity_mass_fraction', 'as_received_sample_mass', 0, 'curated', 'Purity denominator is as-received sample mass.'),
+    ('cnt_ash_mass_fraction', 'dry_sample_mass', 0, 'curated', 'Ash denominator is dry sample mass.'),
+    ('cnt_surface_oxygen_atomic_fraction', 'total_detected_atoms', 0, 'curated', 'Atomic fraction denominator is the stated quantified atom set.'),
+    ('cnt_functional_group_amount', 'dry_nanotube_mass', 1, 'curated', 'Identify functional group and normalize by dry nanotube mass.');
+
+-- --------------------------------------------------------------------------
+-- Research entities and material subtypes
+-- --------------------------------------------------------------------------
+
+CREATE TABLE entity (
+    entity_id TEXT PRIMARY KEY,
+    entity_type TEXT NOT NULL REFERENCES entity_type_term(entity_type),
+    label TEXT NOT NULL,
+    description TEXT,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    retired_at TEXT,
+    UNIQUE (entity_id, entity_type)
+);
+
+CREATE TABLE material_entity (
+    entity_id TEXT PRIMARY KEY REFERENCES entity(entity_id),
+    material_kind TEXT NOT NULL CHECK (material_kind IN (
+        'pure_substance', 'defined_mixture', 'polymer', 'petroleum_material',
+        'brine_pseudocomponent', 'mineral', 'nanomaterial_parent', 'other'
+    )),
+    preferred_name TEXT NOT NULL,
+    molecular_formula TEXT,
+    canonical_smiles TEXT,
+    inchi_key TEXT,
+    notes TEXT,
+    UNIQUE (inchi_key)
+);
+
+CREATE TABLE material_identifier (
+    entity_id TEXT NOT NULL REFERENCES material_entity(entity_id),
+    identifier_scheme TEXT NOT NULL,
+    identifier_value TEXT NOT NULL,
+    identifier_uri TEXT,
+    PRIMARY KEY (entity_id, identifier_scheme, identifier_value),
+    UNIQUE (identifier_scheme, identifier_value)
+);
+
+CREATE TABLE material_lot (
+    entity_id TEXT PRIMARY KEY REFERENCES entity(entity_id),
+    material_entity_id TEXT NOT NULL REFERENCES material_entity(entity_id),
+    supplier TEXT,
+    product_name TEXT,
+    catalogue_number TEXT,
+    batch_number TEXT,
+    purity_original TEXT,
+    product_form TEXT,
+    certificate_uri TEXT,
+    notes TEXT
+);
+
+CREATE TABLE formulation (
+    entity_id TEXT PRIMARY KEY REFERENCES entity(entity_id),
+    formulation_class TEXT NOT NULL CHECK (formulation_class IN (
+        'pure_material', 'aqueous_solution', 'brine', 'surfactant_solution',
+        'polymer_solution', 'drilling_fluid', 'oil', 'emulsion', 'dispersion', 'other'
+    )),
+    composition_stage TEXT NOT NULL CHECK (composition_stage IN (
+        'nominal_preparation', 'measured_precontact', 'equilibrated_phase', 'inferred', 'unknown'
+    )),
+    composition_complete INTEGER NOT NULL DEFAULT 0 CHECK (composition_complete IN (0, 1)),
+    preparation_protocol TEXT,
+    notes TEXT
+);
+
+CREATE TABLE formulation_component (
+    formulation_component_id INTEGER PRIMARY KEY,
+    formulation_id TEXT NOT NULL REFERENCES formulation(entity_id),
+    component_entity_id TEXT NOT NULL REFERENCES entity(entity_id),
+    component_role TEXT,
+    amount_original_text TEXT NOT NULL,
+    amount_original REAL,
+    unit_original TEXT,
+    composition_basis TEXT NOT NULL REFERENCES composition_basis_term(composition_basis),
+    amount_canonical REAL,
+    unit_canonical TEXT,
+    active_product_basis TEXT NOT NULL DEFAULT 'unspecified' CHECK (active_product_basis IN (
+        'total_formulation', 'dry_active', 'solvent_free_active', 'as_received_product', 'unspecified'
+    )),
+    conversion_expression TEXT,
+    conversion_version TEXT,
+    CHECK (amount_original IS NULL OR amount_original >= 0),
+    CHECK (amount_canonical IS NULL OR amount_canonical >= 0)
+) STRICT;
+
+CREATE TABLE phase_sample (
+    entity_id TEXT PRIMARY KEY REFERENCES entity(entity_id),
+    source_entity_id TEXT NOT NULL REFERENCES entity(entity_id),
+    physical_state TEXT NOT NULL CHECK (physical_state IN (
+        'liquid', 'gas', 'vapour', 'supercritical_fluid', 'solid', 'dispersion', 'emulsion'
+    )),
+    composition_stage TEXT NOT NULL CHECK (composition_stage IN (
+        'nominal_preparation', 'measured_precontact', 'equilibrated_phase', 'inferred', 'unknown'
+    )),
+    phase_position TEXT,
+    notes TEXT
+);
+
+CREATE TABLE surface_specimen (
+    entity_id TEXT PRIMARY KEY REFERENCES entity(entity_id),
+    base_material_id TEXT NOT NULL REFERENCES entity(entity_id),
+    material_lot_id TEXT REFERENCES material_lot(entity_id),
+    crystal_face TEXT,
+    surface_termination TEXT,
+    hydroxylation_state TEXT,
+    roughness_value_m REAL CHECK (roughness_value_m IS NULL OR roughness_value_m >= 0),
+    roughness_metric TEXT,
+    preparation_protocol TEXT,
+    cleaning_history TEXT,
+    aging_history TEXT,
+    coating_or_contamination TEXT,
+    notes TEXT
+) STRICT;
+
+-- --------------------------------------------------------------------------
+-- Contexts and participants
+-- --------------------------------------------------------------------------
+
+CREATE TABLE system_context (
+    context_id TEXT PRIMARY KEY,
+    context_type TEXT NOT NULL REFERENCES context_type_term(context_type),
+    label TEXT NOT NULL,
+    description TEXT,
+    canonical_fingerprint TEXT,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    UNIQUE (context_id, context_type)
+);
+
+CREATE TABLE context_participant (
+    context_id TEXT NOT NULL REFERENCES system_context(context_id),
+    entity_id TEXT NOT NULL REFERENCES entity(entity_id),
+    participant_role TEXT NOT NULL REFERENCES participant_role_term(participant_role),
+    reported_role TEXT,
+    ordinal INTEGER NOT NULL DEFAULT 1 CHECK (ordinal >= 1),
+    PRIMARY KEY (context_id, entity_id),
+    UNIQUE (context_id, participant_role)
+) STRICT;
+
+CREATE TABLE contact_angle_context (
+    context_id TEXT PRIMARY KEY REFERENCES system_context(context_id),
+    measured_through_entity_id TEXT NOT NULL,
+    geometry TEXT NOT NULL CHECK (geometry IN (
+        'sessile_drop', 'captive_bubble', 'tilting_plate', 'capillary',
+        'md_droplet', 'md_cylindrical_droplet', 'other', 'unspecified'
+    )),
+    geometry_description TEXT,
+    drop_or_bubble_orientation TEXT,
+    baseline_fitting_method TEXT,
+    FOREIGN KEY (context_id, measured_through_entity_id)
+        REFERENCES context_participant(context_id, entity_id),
+    CHECK (geometry <> 'other' OR (geometry_description IS NOT NULL AND trim(geometry_description) <> ''))
+);
+
+-- --------------------------------------------------------------------------
+-- Agents, sources, assertions, and method runs
+-- --------------------------------------------------------------------------
+
+CREATE TABLE agent (
+    agent_id TEXT PRIMARY KEY,
+    agent_type TEXT NOT NULL CHECK (agent_type IN ('person', 'organization', 'software_agent', 'model_agent')),
+    display_name TEXT NOT NULL,
+    orcid TEXT,
+    ror TEXT,
+    version TEXT
+);
+
+CREATE TABLE source (
+    source_id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    source_type TEXT NOT NULL CHECK (source_type IN (
+        'journal_article', 'dataset', 'database_record', 'book', 'thesis',
+        'patent', 'standard', 'report', 'laboratory_record', 'simulation_artifact', 'other'
+    )),
+    doi TEXT,
+    url TEXT,
+    bibliographic_version TEXT,
+    access_status TEXT NOT NULL CHECK (access_status IN ('open', 'subscription', 'private', 'restricted', 'unknown')),
+    redistribution_status TEXT NOT NULL CHECK (redistribution_status IN ('allowed', 'metadata_only', 'restricted', 'unknown')),
+    license_identifier TEXT,
+    license_uri TEXT,
+    accessed_at TEXT,
+    content_sha256 TEXT CHECK (content_sha256 IS NULL OR length(content_sha256) = 64),
+    UNIQUE (doi)
+);
+
+CREATE TABLE source_assertion (
+    assertion_id TEXT PRIMARY KEY,
+    source_id TEXT NOT NULL REFERENCES source(source_id),
+    exact_locator TEXT NOT NULL,
+    reported_property_label TEXT,
+    reported_value_text TEXT,
+    ingestion_route TEXT NOT NULL CHECK (ingestion_route IN (
+        'primary_publication', 'database_import', 'secondary_source', 'internal_run', 'manual_record'
+    )),
+    extraction_mode TEXT NOT NULL CHECK (extraction_mode IN ('human', 'machine', 'digitized_figure', 'programmatic_import')),
+    verification_status TEXT NOT NULL CHECK (verification_status IN (
+        'machine_extracted', 'human_checked', 'human_verified', 'adjudicated'
+    )),
+    extractor_agent_id TEXT REFERENCES agent(agent_id),
+    verifier_agent_id TEXT REFERENCES agent(agent_id),
+    extracted_at TEXT,
+    verified_at TEXT,
+    source_excerpt_hash TEXT,
+    notes TEXT,
+    CHECK (
+        verification_status = 'machine_extracted'
+        OR (verifier_agent_id IS NOT NULL AND verified_at IS NOT NULL)
+    ),
+    UNIQUE (source_id, exact_locator, reported_property_label, reported_value_text)
+);
+
+CREATE TABLE method_run (
+    method_run_id TEXT PRIMARY KEY,
+    origin_kind TEXT NOT NULL REFERENCES origin_kind_term(origin_kind),
+    method_term TEXT NOT NULL,
+    run_label TEXT NOT NULL,
+    protocol_identifier TEXT,
+    protocol_version TEXT,
+    instrument_name TEXT,
+    instrument_model TEXT,
+    software_name TEXT,
+    software_version TEXT,
+    force_field_or_model TEXT,
+    parameter_profile_id TEXT,
+    parameter_profile_version TEXT,
+    parameters_json TEXT CHECK (parameters_json IS NULL OR json_valid(parameters_json)),
+    input_sha256 TEXT CHECK (input_sha256 IS NULL OR length(input_sha256) = 64),
+    output_uri TEXT,
+    output_sha256 TEXT CHECK (output_sha256 IS NULL OR length(output_sha256) = 64),
+    performed_by_agent_id TEXT REFERENCES agent(agent_id),
+    started_at TEXT,
+    ended_at TEXT,
+    notes TEXT,
+    UNIQUE (method_run_id, origin_kind)
+);
+
+CREATE TABLE method_parameter (
+    method_parameter_id INTEGER PRIMARY KEY,
+    method_run_id TEXT NOT NULL REFERENCES method_run(method_run_id),
+    parameter_term TEXT NOT NULL REFERENCES method_parameter_term(parameter_term),
+    value_term TEXT,
+    value_original_text TEXT NOT NULL,
+    value_original REAL,
+    unit_original TEXT,
+    value_canonical REAL,
+    unit_canonical TEXT,
+    applies_to_entity_id TEXT REFERENCES entity(entity_id),
+    UNIQUE (method_run_id, parameter_term, applies_to_entity_id),
+    FOREIGN KEY (parameter_term, value_term)
+        REFERENCES method_parameter_value_term(parameter_term, value_term)
+) STRICT;
+
+-- --------------------------------------------------------------------------
+-- Conditions
+-- --------------------------------------------------------------------------
+
+CREATE TABLE condition_set (
+    condition_set_id TEXT PRIMARY KEY,
+    label TEXT,
+    reported_conditions TEXT,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE TABLE condition_value (
+    condition_value_id INTEGER PRIMARY KEY,
+    condition_set_id TEXT NOT NULL REFERENCES condition_set(condition_set_id),
+    condition_term_id TEXT NOT NULL REFERENCES condition_term(condition_term_id),
+    applies_to_entity_id TEXT REFERENCES entity(entity_id),
+    value_status TEXT NOT NULL CHECK (value_status IN ('reported', 'derived', 'not_reported', 'not_applicable')),
+    value_original_text TEXT,
+    value_original REAL,
+    unit_original TEXT,
+    value_canonical REAL,
+    unit_canonical TEXT,
+    basis_or_scale TEXT,
+    conversion_expression TEXT,
+    conversion_version TEXT,
+    source_assertion_id TEXT REFERENCES source_assertion(assertion_id),
+    CHECK (
+        (value_status IN ('not_reported', 'not_applicable')
+            AND value_original IS NULL AND value_canonical IS NULL)
+        OR (value_status = 'reported' AND value_original_text IS NOT NULL)
+        OR (value_status = 'derived'
+            AND (value_original_text IS NOT NULL OR value_canonical IS NOT NULL))
+    ),
+    UNIQUE (condition_set_id, condition_term_id, applies_to_entity_id),
+    UNIQUE (condition_value_id, condition_set_id)
+) STRICT;
+
+-- --------------------------------------------------------------------------
+-- MWCNT dispersion and application subtypes
+-- --------------------------------------------------------------------------
+
+CREATE TABLE nanomaterial_lot (
+    entity_id TEXT PRIMARY KEY REFERENCES material_lot(entity_id),
+    nanotube_type TEXT NOT NULL CHECK (nanotube_type IN ('MWCNT', 'SWCNT', 'DWCNT', 'CNF', 'CNT_hybrid', 'other')),
+    synthesis_method TEXT,
+    functionalization_class TEXT NOT NULL DEFAULT 'unknown' CHECK (functionalization_class IN (
+        'none', 'covalent', 'noncovalent', 'hybrid', 'unknown'
+    )),
+    functional_groups TEXT,
+    functionalization_protocol TEXT,
+    product_state TEXT,
+    characterization_notes TEXT
+);
+
+CREATE TABLE dispersion_batch (
+    entity_id TEXT PRIMARY KEY REFERENCES entity(entity_id),
+    formulation_id TEXT NOT NULL REFERENCES formulation(entity_id),
+    preparation_method_run_id TEXT NOT NULL REFERENCES method_run(method_run_id),
+    sonication_mode TEXT,
+    sonicator_model TEXT,
+    amplitude_fraction REAL CHECK (amplitude_fraction IS NULL OR amplitude_fraction BETWEEN 0 AND 1),
+    duty_cycle_fraction REAL CHECK (duty_cycle_fraction IS NULL OR duty_cycle_fraction BETWEEN 0 AND 1),
+    delivered_energy_j REAL CHECK (delivered_energy_j IS NULL OR delivered_energy_j >= 0),
+    specific_energy_j_m3 REAL CHECK (specific_energy_j_m3 IS NULL OR specific_energy_j_m3 >= 0),
+    maximum_temperature_k REAL CHECK (maximum_temperature_k IS NULL OR maximum_temperature_k > 0),
+    mixing_order TEXT,
+    cooling_protocol TEXT,
+    centrifugation_or_filtration TEXT,
+    preparation_protocol TEXT NOT NULL,
+    prepared_at TEXT,
+    notes TEXT
+) STRICT;
+
+CREATE TABLE core_sample (
+    entity_id TEXT PRIMARY KEY REFERENCES entity(entity_id),
+    rock_or_medium_name TEXT NOT NULL,
+    origin TEXT,
+    mineralogy TEXT,
+    orientation TEXT,
+    dimensions_original TEXT,
+    cleaning_protocol TEXT,
+    restoration_protocol TEXT,
+    aging_protocol TEXT,
+    notes TEXT
+);
+
+CREATE TABLE application_run (
+    entity_id TEXT PRIMARY KEY REFERENCES entity(entity_id),
+    application_kind TEXT NOT NULL CHECK (application_kind IN (
+        'drilling_fluid_screening', 'dispersion_stability', 'hpht_filtration',
+        'lubricity', 'core_flood', 'eor', 'other'
+    )),
+    formulation_id TEXT REFERENCES formulation(entity_id),
+    dispersion_batch_id TEXT REFERENCES dispersion_batch(entity_id),
+    core_sample_id TEXT REFERENCES core_sample(entity_id),
+    method_run_id TEXT NOT NULL REFERENCES method_run(method_run_id),
+    baseline_run_id TEXT REFERENCES application_run(entity_id),
+    standard_identifier TEXT,
+    standard_version TEXT,
+    protocol_text TEXT NOT NULL,
+    notes TEXT
+);
+
+CREATE TABLE application_step (
+    application_step_id INTEGER PRIMARY KEY,
+    application_run_id TEXT NOT NULL REFERENCES application_run(entity_id),
+    step_index INTEGER NOT NULL CHECK (step_index >= 1),
+    step_type TEXT NOT NULL,
+    formulation_id TEXT REFERENCES formulation(entity_id),
+    start_time_s REAL CHECK (start_time_s IS NULL OR start_time_s >= 0),
+    end_time_s REAL CHECK (end_time_s IS NULL OR end_time_s >= 0),
+    injected_pore_volume REAL CHECK (injected_pore_volume IS NULL OR injected_pore_volume >= 0),
+    flow_rate_m3_s REAL CHECK (flow_rate_m3_s IS NULL OR flow_rate_m3_s >= 0),
+    reported_step TEXT,
+    UNIQUE (application_run_id, step_index),
+    CHECK (start_time_s IS NULL OR end_time_s IS NULL OR start_time_s <= end_time_s)
+) STRICT;
+
+-- --------------------------------------------------------------------------
+-- Series and generalized observations
+-- --------------------------------------------------------------------------
+
+CREATE TABLE observation_series (
+    series_id TEXT PRIMARY KEY,
+    series_label TEXT NOT NULL,
+    primary_coordinate_term TEXT NOT NULL REFERENCES condition_term(condition_term_id),
+    coordinate_unit_canonical TEXT NOT NULL,
+    time_origin TEXT,
+    method_run_id TEXT REFERENCES method_run(method_run_id),
+    source_assertion_id TEXT REFERENCES source_assertion(assertion_id),
+    notes TEXT,
+    CHECK (primary_coordinate_term <> 'surface_age' OR time_origin IS NOT NULL)
+);
+
+CREATE TABLE observation (
+    observation_id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL DEFAULT '0.2.0',
+    property_id TEXT NOT NULL,
+    context_id TEXT NOT NULL,
+    context_type TEXT NOT NULL,
+    condition_set_id TEXT NOT NULL REFERENCES condition_set(condition_set_id),
+    method_run_id TEXT NOT NULL REFERENCES method_run(method_run_id),
+    source_assertion_id TEXT NOT NULL REFERENCES source_assertion(assertion_id),
+    measurand_entity_id TEXT REFERENCES entity(entity_id),
+    result_basis TEXT REFERENCES result_basis_term(result_basis),
+    result_basis_description TEXT,
+    reported_property_label TEXT,
+    value_kind TEXT NOT NULL CHECK (value_kind IN ('point', 'interval', 'censored')),
+    value_qualifier TEXT NOT NULL DEFAULT 'exact' CHECK (value_qualifier IN (
+        'exact', 'approximate', 'less_than', 'less_or_equal', 'greater_than', 'greater_or_equal'
+    )),
+    raw_value_text TEXT NOT NULL,
+    value_original REAL,
+    lower_original REAL,
+    upper_original REAL,
+    unit_original TEXT NOT NULL,
+    value_canonical REAL,
+    lower_canonical REAL,
+    upper_canonical REAL,
+    unit_canonical TEXT,
+    conversion_expression TEXT,
+    conversion_version TEXT,
+    statistic_kind TEXT NOT NULL DEFAULT 'single_value' CHECK (statistic_kind IN (
+        'single_value', 'mean', 'median', 'mode', 'fitted_value',
+        'simulation_average', 'digitized_estimate', 'model_prediction'
+    )),
+    replicate_count INTEGER CHECK (replicate_count IS NULL OR replicate_count >= 1),
+    replicate_group_id TEXT,
+    series_id TEXT,
+    coordinate_condition_value_id INTEGER,
+    series_point_index INTEGER CHECK (series_point_index IS NULL OR series_point_index >= 0),
+    coordinate_value_original REAL,
+    coordinate_unit_original TEXT,
+    coordinate_value_canonical REAL,
+    coordinate_unit_canonical TEXT,
+    record_state TEXT NOT NULL DEFAULT 'staging' CHECK (record_state IN (
+        'staging', 'curated', 'model_ready', 'withdrawn'
+    )),
+    review_status TEXT NOT NULL DEFAULT 'machine_extracted' CHECK (review_status IN (
+        'machine_extracted', 'single_review', 'double_review', 'adjudicated'
+    )),
+    reviewer_agent_id TEXT REFERENCES agent(agent_id),
+    reviewed_at TEXT,
+    supersedes_observation_id TEXT REFERENCES observation(observation_id),
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    notes TEXT,
+    FOREIGN KEY (property_id) REFERENCES property_term(property_id),
+    FOREIGN KEY (context_id, context_type)
+        REFERENCES system_context(context_id, context_type),
+    FOREIGN KEY (property_id, context_type)
+        REFERENCES property_context_rule(property_id, context_type),
+    FOREIGN KEY (series_id) REFERENCES observation_series(series_id),
+    FOREIGN KEY (coordinate_condition_value_id, condition_set_id)
+        REFERENCES condition_value(condition_value_id, condition_set_id),
+    CHECK (
+        (value_kind = 'point'
+            AND value_original IS NOT NULL
+            AND lower_original IS NULL AND upper_original IS NULL
+            AND value_qualifier IN ('exact', 'approximate'))
+        OR
+        (value_kind = 'interval'
+            AND lower_original IS NOT NULL AND upper_original IS NOT NULL
+            AND lower_original <= upper_original
+            AND value_qualifier IN ('exact', 'approximate'))
+        OR
+        (value_kind = 'censored'
+            AND value_original IS NOT NULL
+            AND lower_original IS NULL AND upper_original IS NULL
+            AND value_qualifier IN ('less_than', 'less_or_equal', 'greater_than', 'greater_or_equal'))
+    ),
+    CHECK (
+        record_state = 'staging'
+        OR
+        (unit_canonical IS NOT NULL AND (
+            (value_kind IN ('point', 'censored') AND value_canonical IS NOT NULL)
+            OR
+            (value_kind = 'interval' AND lower_canonical IS NOT NULL
+                AND upper_canonical IS NOT NULL AND lower_canonical <= upper_canonical)
+        ))
+    ),
+    CHECK (
+        (value_kind IN ('point', 'censored')
+            AND lower_canonical IS NULL AND upper_canonical IS NULL)
+        OR
+        (value_kind = 'interval' AND value_canonical IS NULL)
+    ),
+    CHECK (
+        (series_id IS NULL
+            AND coordinate_condition_value_id IS NULL
+            AND series_point_index IS NULL
+            AND coordinate_value_original IS NULL
+            AND coordinate_unit_original IS NULL
+            AND coordinate_value_canonical IS NULL
+            AND coordinate_unit_canonical IS NULL)
+        OR
+        (series_id IS NOT NULL
+            AND coordinate_condition_value_id IS NOT NULL
+            AND series_point_index IS NOT NULL
+            AND coordinate_value_original IS NOT NULL
+            AND coordinate_unit_original IS NOT NULL
+            AND (record_state = 'staging'
+                 OR (coordinate_value_canonical IS NOT NULL
+                     AND coordinate_unit_canonical IS NOT NULL)))
+    ),
+    CHECK (
+        record_state = 'staging'
+        OR unit_original = unit_canonical
+        OR (conversion_expression IS NOT NULL AND trim(conversion_expression) <> ''
+            AND conversion_version IS NOT NULL AND trim(conversion_version) <> '')
+    ),
+    CHECK (
+        review_status = 'machine_extracted'
+        OR (reviewer_agent_id IS NOT NULL AND reviewed_at IS NOT NULL)
+    ),
+    CHECK (
+        record_state <> 'model_ready'
+        OR review_status IN ('double_review', 'adjudicated')
+    )
+) STRICT;
+
+CREATE TABLE uncertainty_component (
+    uncertainty_id INTEGER PRIMARY KEY,
+    observation_id TEXT NOT NULL REFERENCES observation(observation_id),
+    uncertainty_status TEXT NOT NULL CHECK (uncertainty_status IN (
+        'reported', 'derived', 'not_reported', 'not_applicable'
+    )),
+    uncertainty_kind TEXT NOT NULL CHECK (uncertainty_kind IN (
+        'standard_uncertainty', 'expanded_uncertainty', 'standard_deviation',
+        'standard_error', 'confidence_interval', 'range', 'digitization',
+        'simulation_sampling', 'model_predictive', 'unspecified', 'none'
+    )),
+    value REAL CHECK (value IS NULL OR value >= 0),
+    lower_bound REAL,
+    upper_bound REAL,
+    unit_code TEXT,
+    coverage_factor REAL CHECK (coverage_factor IS NULL OR coverage_factor > 0),
+    confidence_level REAL CHECK (confidence_level IS NULL OR confidence_level > 0 AND confidence_level <= 1),
+    derivation TEXT,
+    source_assertion_id TEXT REFERENCES source_assertion(assertion_id),
+    CHECK (
+        (uncertainty_status IN ('not_reported', 'not_applicable')
+            AND uncertainty_kind = 'none'
+            AND value IS NULL AND lower_bound IS NULL AND upper_bound IS NULL)
+        OR
+        (uncertainty_status IN ('reported', 'derived')
+            AND (
+                (uncertainty_kind IN ('confidence_interval', 'range')
+                    AND lower_bound IS NOT NULL AND upper_bound IS NOT NULL
+                    AND lower_bound <= upper_bound)
+                OR
+                (uncertainty_kind NOT IN ('confidence_interval', 'range', 'none')
+                    AND value IS NOT NULL)
+            ))
+    ),
+    CHECK (uncertainty_kind <> 'confidence_interval' OR confidence_level IS NOT NULL),
+    CHECK (uncertainty_kind <> 'expanded_uncertainty' OR coverage_factor IS NOT NULL)
+) STRICT;
+
+CREATE TABLE observation_relation (
+    subject_observation_id TEXT NOT NULL REFERENCES observation(observation_id),
+    object_observation_id TEXT NOT NULL REFERENCES observation(observation_id),
+    relation_type TEXT NOT NULL CHECK (relation_type IN (
+        'derived_from', 'replicate_of', 'control_for', 'baseline_for',
+        'conflicts_with', 'digitized_from', 'supersedes'
+    )),
+    transformation_activity_id TEXT REFERENCES provenance_activity(activity_id),
+    notes TEXT,
+    PRIMARY KEY (subject_observation_id, object_observation_id, relation_type),
+    CHECK (subject_observation_id <> object_observation_id)
+);
+
+CREATE TABLE qc_run (
+    qc_run_id TEXT PRIMARY KEY,
+    validator_name TEXT NOT NULL,
+    validator_version TEXT NOT NULL,
+    schema_version TEXT NOT NULL,
+    started_at TEXT NOT NULL,
+    completed_at TEXT,
+    parameters_json TEXT CHECK (parameters_json IS NULL OR json_valid(parameters_json))
+);
+
+CREATE TABLE qc_issue (
+    qc_run_id TEXT NOT NULL REFERENCES qc_run(qc_run_id),
+    observation_id TEXT NOT NULL REFERENCES observation(observation_id),
+    issue_code TEXT NOT NULL,
+    severity TEXT NOT NULL CHECK (severity IN ('info', 'warning', 'error')),
+    message TEXT NOT NULL,
+    resolved INTEGER NOT NULL DEFAULT 0 CHECK (resolved IN (0, 1)),
+    resolution_note TEXT,
+    PRIMARY KEY (qc_run_id, observation_id, issue_code)
+);
+
+-- --------------------------------------------------------------------------
+-- PROV-like activity graph
+-- --------------------------------------------------------------------------
+
+CREATE TABLE provenance_activity (
+    activity_id TEXT PRIMARY KEY,
+    activity_type TEXT NOT NULL CHECK (activity_type IN (
+        'extraction', 'normalization', 'unit_conversion', 'digitization',
+        'simulation', 'model_training', 'prediction', 'derivation', 'review', 'migration'
+    )),
+    associated_agent_id TEXT NOT NULL REFERENCES agent(agent_id),
+    code_or_prompt_version TEXT,
+    software_environment TEXT,
+    parameters_json TEXT CHECK (parameters_json IS NULL OR json_valid(parameters_json)),
+    started_at TEXT NOT NULL,
+    ended_at TEXT
+);
+
+CREATE TABLE provenance_input (
+    activity_id TEXT NOT NULL REFERENCES provenance_activity(activity_id),
+    input_ordinal INTEGER NOT NULL CHECK (input_ordinal >= 1),
+    used_observation_id TEXT REFERENCES observation(observation_id),
+    used_source_id TEXT REFERENCES source(source_id),
+    used_entity_id TEXT REFERENCES entity(entity_id),
+    used_artifact_uri TEXT,
+    used_artifact_sha256 TEXT CHECK (used_artifact_sha256 IS NULL OR length(used_artifact_sha256) = 64),
+    PRIMARY KEY (activity_id, input_ordinal),
+    CHECK (
+        (used_observation_id IS NOT NULL)
+        + (used_source_id IS NOT NULL)
+        + (used_entity_id IS NOT NULL)
+        + (used_artifact_uri IS NOT NULL) = 1
+    )
+) STRICT;
+
+CREATE TABLE provenance_generated_observation (
+    activity_id TEXT NOT NULL REFERENCES provenance_activity(activity_id),
+    observation_id TEXT NOT NULL REFERENCES observation(observation_id),
+    PRIMARY KEY (activity_id, observation_id)
+);
+
+-- --------------------------------------------------------------------------
+-- Dataset snapshots, disjoint splits, ML models, and applicability domain
+-- --------------------------------------------------------------------------
+
+CREATE TABLE dataset_snapshot (
+    snapshot_id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    description TEXT,
+    selection_query TEXT NOT NULL,
+    content_sha256 TEXT NOT NULL CHECK (length(content_sha256) = 64),
+    schema_version TEXT NOT NULL,
+    vocabulary_version TEXT NOT NULL,
+    license_identifier TEXT,
+    created_by_agent_id TEXT NOT NULL REFERENCES agent(agent_id),
+    created_at TEXT NOT NULL,
+    snapshot_state TEXT NOT NULL DEFAULT 'draft' CHECK (snapshot_state IN ('draft', 'frozen')),
+    finalized_at TEXT,
+    CHECK (
+        (snapshot_state = 'draft' AND finalized_at IS NULL)
+        OR (snapshot_state = 'frozen' AND finalized_at IS NOT NULL)
+    )
+) STRICT;
+
+CREATE TABLE dataset_member (
+    snapshot_id TEXT NOT NULL REFERENCES dataset_snapshot(snapshot_id),
+    observation_id TEXT NOT NULL REFERENCES observation(observation_id),
+    PRIMARY KEY (snapshot_id, observation_id)
+) STRICT;
+
+CREATE TABLE split_definition (
+    split_id TEXT PRIMARY KEY,
+    snapshot_id TEXT NOT NULL REFERENCES dataset_snapshot(snapshot_id),
+    strategy TEXT NOT NULL CHECK (strategy IN (
+        'random_row', 'series_disjoint', 'source_disjoint', 'component_disjoint',
+        'system_disjoint', 'mineral_family_disjoint', 'laboratory_disjoint',
+        'time_disjoint', 'mwcnt_lot_disjoint', 'functionalization_disjoint', 'custom_group_disjoint'
+    )),
+    group_axes_json TEXT NOT NULL CHECK (json_valid(group_axes_json)),
+    random_seed INTEGER,
+    assignment_sha256 TEXT NOT NULL CHECK (length(assignment_sha256) = 64),
+    created_at TEXT NOT NULL,
+    UNIQUE (split_id, snapshot_id)
+) STRICT;
+
+CREATE TABLE split_assignment (
+    split_id TEXT NOT NULL,
+    snapshot_id TEXT NOT NULL,
+    observation_id TEXT NOT NULL,
+    split_partition TEXT NOT NULL CHECK (split_partition IN ('train', 'validation', 'test')),
+    group_key TEXT NOT NULL,
+    PRIMARY KEY (split_id, observation_id),
+    FOREIGN KEY (split_id, snapshot_id)
+        REFERENCES split_definition(split_id, snapshot_id),
+    FOREIGN KEY (snapshot_id, observation_id)
+        REFERENCES dataset_member(snapshot_id, observation_id)
+) STRICT;
+
+CREATE TABLE ml_model (
+    model_id TEXT PRIMARY KEY,
+    model_label TEXT NOT NULL,
+    algorithm_family TEXT NOT NULL,
+    code_repository_uri TEXT,
+    description TEXT
+);
+
+CREATE TABLE ml_model_run (
+    model_run_id TEXT PRIMARY KEY,
+    model_id TEXT NOT NULL REFERENCES ml_model(model_id),
+    method_run_id TEXT NOT NULL UNIQUE REFERENCES method_run(method_run_id),
+    dataset_snapshot_id TEXT NOT NULL,
+    split_id TEXT NOT NULL,
+    feature_schema_version TEXT NOT NULL,
+    preprocessing_sha256 TEXT NOT NULL CHECK (length(preprocessing_sha256) = 64),
+    code_version TEXT NOT NULL,
+    environment_sha256 TEXT NOT NULL CHECK (length(environment_sha256) = 64),
+    random_seed INTEGER,
+    hyperparameters_json TEXT NOT NULL CHECK (json_valid(hyperparameters_json)),
+    artifact_uri TEXT,
+    artifact_sha256 TEXT CHECK (artifact_sha256 IS NULL OR length(artifact_sha256) = 64),
+    FOREIGN KEY (split_id, dataset_snapshot_id)
+        REFERENCES split_definition(split_id, snapshot_id),
+    UNIQUE (model_run_id, model_id)
+) STRICT;
+
+CREATE TABLE ml_prediction_detail (
+    observation_id TEXT PRIMARY KEY REFERENCES observation(observation_id),
+    model_run_id TEXT NOT NULL REFERENCES ml_model_run(model_run_id),
+    prediction_target TEXT NOT NULL,
+    notes TEXT,
+    UNIQUE (observation_id, model_run_id)
+);
+
+CREATE TABLE domain_rule (
+    domain_rule_id TEXT PRIMARY KEY,
+    model_run_id TEXT NOT NULL REFERENCES ml_model_run(model_run_id),
+    rule_version TEXT NOT NULL,
+    metric_name TEXT NOT NULL,
+    feature_space_version TEXT NOT NULL,
+    in_domain_operator TEXT NOT NULL CHECK (in_domain_operator IN ('less_or_equal', 'greater_or_equal', 'between')),
+    threshold_low REAL NOT NULL,
+    threshold_high REAL,
+    calibration_snapshot_id TEXT REFERENCES dataset_snapshot(snapshot_id),
+    definition TEXT NOT NULL,
+    UNIQUE (domain_rule_id, model_run_id),
+    CHECK (
+        (in_domain_operator IN ('less_or_equal', 'greater_or_equal') AND threshold_high IS NULL)
+        OR
+        (in_domain_operator = 'between' AND threshold_high IS NOT NULL AND threshold_low <= threshold_high)
+    )
+) STRICT;
+
+CREATE TABLE domain_assessment (
+    domain_assessment_id TEXT PRIMARY KEY,
+    prediction_observation_id TEXT NOT NULL,
+    model_run_id TEXT NOT NULL,
+    domain_rule_id TEXT NOT NULL,
+    score REAL NOT NULL,
+    decision TEXT NOT NULL CHECK (decision IN ('in_domain', 'borderline', 'out_of_domain', 'unknown')),
+    nearest_training_observation_id TEXT REFERENCES observation(observation_id),
+    nearest_training_distance REAL CHECK (nearest_training_distance IS NULL OR nearest_training_distance >= 0),
+    reasons_json TEXT CHECK (reasons_json IS NULL OR json_valid(reasons_json)),
+    assessed_at TEXT NOT NULL,
+    FOREIGN KEY (prediction_observation_id, model_run_id)
+        REFERENCES ml_prediction_detail(observation_id, model_run_id),
+    FOREIGN KEY (domain_rule_id, model_run_id)
+        REFERENCES domain_rule(domain_rule_id, model_run_id),
+    UNIQUE (prediction_observation_id, domain_rule_id)
+) STRICT;
+
+-- --------------------------------------------------------------------------
+-- Relational and scientific integrity triggers
+-- --------------------------------------------------------------------------
+
+CREATE TRIGGER trg_material_entity_type
+BEFORE INSERT ON material_entity
+WHEN (SELECT entity_type FROM entity WHERE entity_id = NEW.entity_id) <> 'material'
+BEGIN
+    SELECT RAISE(ABORT, 'material_entity requires entity_type=material');
+END;
+
+CREATE TRIGGER trg_material_lot_type
+BEFORE INSERT ON material_lot
+WHEN (SELECT entity_type FROM entity WHERE entity_id = NEW.entity_id)
+     NOT IN ('material_lot', 'nanomaterial_lot')
+BEGIN
+    SELECT RAISE(ABORT, 'material_lot requires entity_type=material_lot or nanomaterial_lot');
+END;
+
+CREATE TRIGGER trg_formulation_type
+BEFORE INSERT ON formulation
+WHEN (SELECT entity_type FROM entity WHERE entity_id = NEW.entity_id) <> 'formulation'
+BEGIN
+    SELECT RAISE(ABORT, 'formulation requires entity_type=formulation');
+END;
+
+CREATE TRIGGER trg_phase_sample_type
+BEFORE INSERT ON phase_sample
+WHEN (SELECT entity_type FROM entity WHERE entity_id = NEW.entity_id) <> 'phase_sample'
+BEGIN
+    SELECT RAISE(ABORT, 'phase_sample requires entity_type=phase_sample');
+END;
+
+CREATE TRIGGER trg_surface_specimen_type
+BEFORE INSERT ON surface_specimen
+WHEN (SELECT entity_type FROM entity WHERE entity_id = NEW.entity_id) <> 'surface_specimen'
+BEGIN
+    SELECT RAISE(ABORT, 'surface_specimen requires entity_type=surface_specimen');
+END;
+
+CREATE TRIGGER trg_nanomaterial_lot_type
+BEFORE INSERT ON nanomaterial_lot
+WHEN (SELECT entity_type FROM entity WHERE entity_id = NEW.entity_id) <> 'nanomaterial_lot'
+BEGIN
+    SELECT RAISE(ABORT, 'nanomaterial_lot requires entity_type=nanomaterial_lot');
+END;
+
+CREATE TRIGGER trg_dispersion_batch_type
+BEFORE INSERT ON dispersion_batch
+WHEN (SELECT entity_type FROM entity WHERE entity_id = NEW.entity_id) <> 'dispersion_batch'
+BEGIN
+    SELECT RAISE(ABORT, 'dispersion_batch requires entity_type=dispersion_batch');
+END;
+
+CREATE TRIGGER trg_core_sample_type
+BEFORE INSERT ON core_sample
+WHEN (SELECT entity_type FROM entity WHERE entity_id = NEW.entity_id) <> 'core_sample'
+BEGIN
+    SELECT RAISE(ABORT, 'core_sample requires entity_type=core_sample');
+END;
+
+CREATE TRIGGER trg_application_run_type
+BEFORE INSERT ON application_run
+WHEN (SELECT entity_type FROM entity WHERE entity_id = NEW.entity_id) <> 'application_run'
+BEGIN
+    SELECT RAISE(ABORT, 'application_run requires entity_type=application_run');
+END;
+
+CREATE TRIGGER trg_context_participant_subtype
+BEFORE INSERT ON context_participant
+BEGIN
+    SELECT CASE
+        WHEN NEW.participant_role IN (
+            'liquid_phase', 'liquid_phase_a', 'liquid_phase_b'
+        ) AND NOT EXISTS (
+            SELECT 1 FROM phase_sample
+            WHERE entity_id = NEW.entity_id
+              AND physical_state IN ('liquid', 'dispersion', 'emulsion')
+        ) THEN RAISE(ABORT, 'liquid participant role requires a liquid, dispersion, or emulsion phase_sample')
+        WHEN NEW.participant_role = 'gas_phase' AND NOT EXISTS (
+            SELECT 1 FROM phase_sample
+            WHERE entity_id = NEW.entity_id
+              AND physical_state IN ('gas', 'vapour')
+        ) THEN RAISE(ABORT, 'gas_phase role requires a gas or vapour phase_sample')
+        WHEN NEW.participant_role IN ('probe_phase', 'ambient_phase') AND NOT EXISTS (
+            SELECT 1 FROM phase_sample
+            WHERE entity_id = NEW.entity_id
+              AND physical_state IN (
+                  'liquid', 'dispersion', 'emulsion', 'gas', 'vapour',
+                  'supercritical_fluid'
+              )
+        ) THEN RAISE(ABORT, 'probe and ambient roles require fluid phase_sample entities')
+        WHEN NEW.participant_role = 'solid_surface' AND NOT EXISTS (
+            SELECT 1 FROM surface_specimen WHERE entity_id = NEW.entity_id
+        ) THEN RAISE(ABORT, 'solid_surface role requires a surface_specimen')
+        WHEN NEW.participant_role = 'subject_nanomaterial_lot' AND NOT EXISTS (
+            SELECT 1 FROM nanomaterial_lot WHERE entity_id = NEW.entity_id
+        ) THEN RAISE(ABORT, 'subject_nanomaterial_lot role requires a nanomaterial_lot')
+        WHEN NEW.participant_role = 'dispersion' AND NOT EXISTS (
+            SELECT 1 FROM dispersion_batch WHERE entity_id = NEW.entity_id
+        ) THEN RAISE(ABORT, 'dispersion role requires a dispersion_batch')
+        WHEN NEW.participant_role = 'application_run' AND NOT EXISTS (
+            SELECT 1 FROM application_run WHERE entity_id = NEW.entity_id
+        ) THEN RAISE(ABORT, 'application_run role requires an application_run')
+        WHEN NEW.participant_role = 'porous_medium' AND NOT EXISTS (
+            SELECT 1 FROM core_sample WHERE entity_id = NEW.entity_id
+        ) THEN RAISE(ABORT, 'porous_medium role requires a core_sample')
+        WHEN NEW.participant_role = 'formulation' AND NOT EXISTS (
+            SELECT 1 FROM formulation WHERE entity_id = NEW.entity_id
+        ) THEN RAISE(ABORT, 'formulation role requires a formulation')
+        WHEN NEW.participant_role = 'bulk_fluid' AND (
+            SELECT entity_type FROM entity WHERE entity_id = NEW.entity_id
+        ) NOT IN ('formulation', 'phase_sample', 'dispersion_batch')
+        THEN RAISE(ABORT, 'bulk_fluid role requires formulation, phase_sample, or dispersion_batch')
+    END;
+END;
+
+CREATE TRIGGER trg_observation_context_shape_insert
+BEFORE INSERT ON observation
+BEGIN
+    SELECT CASE
+        WHEN NEW.context_type = 'liquid_gas_interface' AND NOT (
+            (SELECT count(*) FROM context_participant WHERE context_id = NEW.context_id) = 2
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'liquid_phase')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'gas_phase')
+        ) THEN RAISE(ABORT, 'liquid_gas_interface requires exactly liquid_phase and gas_phase')
+        WHEN NEW.context_type = 'liquid_liquid_interface' AND NOT (
+            (SELECT count(*) FROM context_participant WHERE context_id = NEW.context_id) = 2
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'liquid_phase_a')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'liquid_phase_b')
+        ) THEN RAISE(ABORT, 'liquid_liquid_interface requires exactly liquid_phase_a and liquid_phase_b')
+        WHEN NEW.context_type = 'liquid_solid_interface' AND NOT (
+            (SELECT count(*) FROM context_participant WHERE context_id = NEW.context_id) = 2
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'liquid_phase')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'solid_surface')
+        ) THEN RAISE(ABORT, 'liquid_solid_interface requires exactly liquid_phase and solid_surface')
+        WHEN NEW.context_type = 'three_phase_contact' AND NOT (
+            (SELECT count(*) FROM context_participant WHERE context_id = NEW.context_id) = 3
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'probe_phase')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'ambient_phase')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'solid_surface')
+            AND EXISTS (
+                SELECT 1
+                FROM contact_angle_context c
+                JOIN context_participant p
+                  ON p.context_id = c.context_id
+                 AND p.entity_id = c.measured_through_entity_id
+                WHERE c.context_id = NEW.context_id
+                  AND p.participant_role IN ('probe_phase', 'ambient_phase')
+            )
+        ) THEN RAISE(ABORT, 'three_phase_contact requires probe, ambient, solid, geometry, and measured-through phase')
+        WHEN NEW.context_type = 'bulk_fluid' AND NOT EXISTS (
+            SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'bulk_fluid'
+        ) THEN RAISE(ABORT, 'bulk_fluid context requires a bulk_fluid participant')
+        WHEN NEW.context_type = 'nanomaterial_lot' AND NOT EXISTS (
+            SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'subject_nanomaterial_lot'
+        ) THEN RAISE(ABORT, 'nanomaterial_lot context requires a subject_nanomaterial_lot participant')
+        WHEN NEW.context_type = 'dispersion' AND NOT EXISTS (
+            SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'dispersion'
+        ) THEN RAISE(ABORT, 'dispersion context requires a dispersion participant')
+        WHEN NEW.context_type IN ('filtration_test', 'lubricity_test') AND NOT EXISTS (
+            SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'application_run'
+        ) THEN RAISE(ABORT, 'application test context requires an application_run participant')
+        WHEN NEW.context_type = 'porous_media_flow' AND NOT (
+            EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'application_run')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'porous_medium')
+        ) THEN RAISE(ABORT, 'porous_media_flow requires application_run and porous_medium participants')
+    END;
+END;
+
+CREATE TRIGGER trg_observation_context_shape_update
+BEFORE UPDATE OF context_id, context_type, property_id ON observation
+BEGIN
+    SELECT CASE
+        WHEN NEW.context_type = 'liquid_gas_interface' AND NOT (
+            (SELECT count(*) FROM context_participant WHERE context_id = NEW.context_id) = 2
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'liquid_phase')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'gas_phase')
+        ) THEN RAISE(ABORT, 'liquid_gas_interface requires exactly liquid_phase and gas_phase')
+        WHEN NEW.context_type = 'liquid_liquid_interface' AND NOT (
+            (SELECT count(*) FROM context_participant WHERE context_id = NEW.context_id) = 2
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'liquid_phase_a')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'liquid_phase_b')
+        ) THEN RAISE(ABORT, 'liquid_liquid_interface requires exactly liquid_phase_a and liquid_phase_b')
+        WHEN NEW.context_type = 'liquid_solid_interface' AND NOT (
+            (SELECT count(*) FROM context_participant WHERE context_id = NEW.context_id) = 2
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'liquid_phase')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'solid_surface')
+        ) THEN RAISE(ABORT, 'liquid_solid_interface requires exactly liquid_phase and solid_surface')
+        WHEN NEW.context_type = 'three_phase_contact' AND NOT (
+            (SELECT count(*) FROM context_participant WHERE context_id = NEW.context_id) = 3
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'probe_phase')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'ambient_phase')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'solid_surface')
+            AND EXISTS (
+                SELECT 1
+                FROM contact_angle_context c
+                JOIN context_participant p
+                  ON p.context_id = c.context_id
+                 AND p.entity_id = c.measured_through_entity_id
+                WHERE c.context_id = NEW.context_id
+                  AND p.participant_role IN ('probe_phase', 'ambient_phase')
+            )
+        ) THEN RAISE(ABORT, 'three_phase_contact requires probe, ambient, solid, geometry, and measured-through phase')
+        WHEN NEW.context_type = 'bulk_fluid' AND NOT EXISTS (
+            SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'bulk_fluid'
+        ) THEN RAISE(ABORT, 'bulk_fluid context requires a bulk_fluid participant')
+        WHEN NEW.context_type = 'nanomaterial_lot' AND NOT EXISTS (
+            SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'subject_nanomaterial_lot'
+        ) THEN RAISE(ABORT, 'nanomaterial_lot context requires a subject_nanomaterial_lot participant')
+        WHEN NEW.context_type = 'dispersion' AND NOT EXISTS (
+            SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'dispersion'
+        ) THEN RAISE(ABORT, 'dispersion context requires a dispersion participant')
+        WHEN NEW.context_type IN ('filtration_test', 'lubricity_test') AND NOT EXISTS (
+            SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'application_run'
+        ) THEN RAISE(ABORT, 'application test context requires an application_run participant')
+        WHEN NEW.context_type = 'porous_media_flow' AND NOT (
+            EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'application_run')
+            AND EXISTS (SELECT 1 FROM context_participant WHERE context_id = NEW.context_id AND participant_role = 'porous_medium')
+        ) THEN RAISE(ABORT, 'porous_media_flow requires application_run and porous_medium participants')
+    END;
+END;
+
+CREATE TRIGGER trg_entity_type_lock_after_subtype
+BEFORE UPDATE OF entity_type ON entity
+WHEN NEW.entity_type <> OLD.entity_type
+ AND (
+    EXISTS (SELECT 1 FROM material_entity WHERE entity_id = OLD.entity_id)
+    OR EXISTS (SELECT 1 FROM material_lot WHERE entity_id = OLD.entity_id)
+    OR EXISTS (SELECT 1 FROM formulation WHERE entity_id = OLD.entity_id)
+    OR EXISTS (SELECT 1 FROM phase_sample WHERE entity_id = OLD.entity_id)
+    OR EXISTS (SELECT 1 FROM surface_specimen WHERE entity_id = OLD.entity_id)
+    OR EXISTS (SELECT 1 FROM dispersion_batch WHERE entity_id = OLD.entity_id)
+    OR EXISTS (SELECT 1 FROM core_sample WHERE entity_id = OLD.entity_id)
+    OR EXISTS (SELECT 1 FROM application_run WHERE entity_id = OLD.entity_id)
+ )
+BEGIN
+    SELECT RAISE(ABORT, 'entity_type is immutable after a subtype row exists');
+END;
+
+CREATE TRIGGER trg_phase_sample_state_lock
+BEFORE UPDATE OF physical_state ON phase_sample
+WHEN NEW.physical_state <> OLD.physical_state
+ AND EXISTS (
+    SELECT 1 FROM context_participant WHERE entity_id = OLD.entity_id
+ )
+BEGIN
+    SELECT RAISE(ABORT, 'phase physical_state is immutable while used by a context');
+END;
+
+CREATE TRIGGER trg_surface_specimen_lock
+BEFORE UPDATE ON surface_specimen
+WHEN EXISTS (
+    SELECT 1
+    FROM context_participant cp
+    JOIN observation o ON o.context_id = cp.context_id
+    WHERE cp.entity_id = OLD.entity_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'surface specimen metadata are immutable after contextual observation use');
+END;
+
+CREATE TRIGGER trg_context_participant_identity_lock
+BEFORE UPDATE OF context_id, entity_id, participant_role ON context_participant
+BEGIN
+    SELECT RAISE(ABORT, 'participant identity and role are immutable; replace the row before use');
+END;
+
+CREATE TRIGGER trg_context_participant_lock_delete
+BEFORE DELETE ON context_participant
+WHEN EXISTS (SELECT 1 FROM observation WHERE context_id = OLD.context_id)
+BEGIN
+    SELECT RAISE(ABORT, 'context participants are immutable after an observation uses the context');
+END;
+
+CREATE TRIGGER trg_context_participant_lock_insert
+BEFORE INSERT ON context_participant
+WHEN EXISTS (SELECT 1 FROM observation WHERE context_id = NEW.context_id)
+BEGIN
+    SELECT RAISE(ABORT, 'context participants are immutable after an observation uses the context');
+END;
+
+CREATE TRIGGER trg_context_participant_lock_update
+BEFORE UPDATE ON context_participant
+WHEN EXISTS (SELECT 1 FROM observation WHERE context_id = OLD.context_id)
+  OR EXISTS (SELECT 1 FROM observation WHERE context_id = NEW.context_id)
+BEGIN
+    SELECT RAISE(ABORT, 'context participants are immutable after an observation uses the context');
+END;
+
+CREATE TRIGGER trg_system_context_lock
+BEFORE UPDATE ON system_context
+WHEN EXISTS (SELECT 1 FROM observation WHERE context_id = OLD.context_id)
+BEGIN
+    SELECT RAISE(ABORT, 'system context is immutable after an observation uses it');
+END;
+
+CREATE TRIGGER trg_contact_angle_context_lock_update
+BEFORE UPDATE ON contact_angle_context
+WHEN EXISTS (SELECT 1 FROM observation WHERE context_id = OLD.context_id)
+BEGIN
+    SELECT RAISE(ABORT, 'contact-angle geometry is immutable after an observation uses the context');
+END;
+
+CREATE TRIGGER trg_contact_angle_context_lock_delete
+BEFORE DELETE ON contact_angle_context
+WHEN EXISTS (SELECT 1 FROM observation WHERE context_id = OLD.context_id)
+BEGIN
+    SELECT RAISE(ABORT, 'contact-angle geometry is immutable after an observation uses the context');
+END;
+
+CREATE TRIGGER trg_series_coordinate_unit_insert
+BEFORE INSERT ON observation_series
+WHEN EXISTS (
+    SELECT 1
+    FROM condition_term t
+    WHERE t.condition_term_id = NEW.primary_coordinate_term
+      AND t.canonical_unit_code IS NOT NULL
+      AND t.canonical_unit_code <> NEW.coordinate_unit_canonical
+)
+BEGIN
+    SELECT RAISE(ABORT, 'series coordinate unit does not match condition term');
+END;
+
+CREATE TRIGGER trg_series_coordinate_unit_update
+BEFORE UPDATE OF primary_coordinate_term, coordinate_unit_canonical ON observation_series
+WHEN EXISTS (
+    SELECT 1
+    FROM condition_term t
+    WHERE t.condition_term_id = NEW.primary_coordinate_term
+      AND t.canonical_unit_code IS NOT NULL
+      AND t.canonical_unit_code <> NEW.coordinate_unit_canonical
+)
+BEGIN
+    SELECT RAISE(ABORT, 'series coordinate unit does not match condition term');
+END;
+
+CREATE TRIGGER trg_series_semantics_lock_update
+BEFORE UPDATE OF primary_coordinate_term, coordinate_unit_canonical, time_origin ON observation_series
+WHEN EXISTS (SELECT 1 FROM observation WHERE series_id = OLD.series_id)
+BEGIN
+    SELECT RAISE(ABORT, 'series coordinate semantics are immutable after a point is stored');
+END;
+
+CREATE TRIGGER trg_coordinate_condition_lock_update
+BEFORE UPDATE OF condition_set_id, condition_term_id, applies_to_entity_id,
+                 value_status, value_original_text, value_original, unit_original,
+                 value_canonical, unit_canonical, basis_or_scale,
+                 conversion_expression, conversion_version ON condition_value
+WHEN EXISTS (
+    SELECT 1
+    FROM observation
+    WHERE coordinate_condition_value_id = OLD.condition_value_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'a condition value used as a series coordinate is immutable');
+END;
+
+CREATE TRIGGER trg_used_condition_set_update
+BEFORE UPDATE ON condition_set
+WHEN EXISTS (SELECT 1 FROM observation WHERE condition_set_id = OLD.condition_set_id)
+BEGIN
+    SELECT RAISE(ABORT, 'a condition set used by an observation is immutable');
+END;
+
+CREATE TRIGGER trg_used_condition_value_insert
+BEFORE INSERT ON condition_value
+WHEN EXISTS (SELECT 1 FROM observation WHERE condition_set_id = NEW.condition_set_id)
+BEGIN
+    SELECT RAISE(ABORT, 'conditions cannot be added after an observation uses the set');
+END;
+
+CREATE TRIGGER trg_used_condition_value_update
+BEFORE UPDATE ON condition_value
+WHEN EXISTS (SELECT 1 FROM observation WHERE condition_set_id = OLD.condition_set_id)
+  OR EXISTS (SELECT 1 FROM observation WHERE condition_set_id = NEW.condition_set_id)
+BEGIN
+    SELECT RAISE(ABORT, 'conditions used by an observation are immutable');
+END;
+
+CREATE TRIGGER trg_used_condition_value_delete
+BEFORE DELETE ON condition_value
+WHEN EXISTS (SELECT 1 FROM observation WHERE condition_set_id = OLD.condition_set_id)
+BEGIN
+    SELECT RAISE(ABORT, 'conditions used by an observation are immutable');
+END;
+
+CREATE TRIGGER trg_used_method_run_update
+BEFORE UPDATE ON method_run
+WHEN EXISTS (SELECT 1 FROM observation WHERE method_run_id = OLD.method_run_id)
+  OR EXISTS (SELECT 1 FROM observation_series WHERE method_run_id = OLD.method_run_id)
+  OR EXISTS (SELECT 1 FROM dispersion_batch WHERE preparation_method_run_id = OLD.method_run_id)
+  OR EXISTS (SELECT 1 FROM application_run WHERE method_run_id = OLD.method_run_id)
+BEGIN
+    SELECT RAISE(ABORT, 'a method run is immutable after use');
+END;
+
+CREATE TRIGGER trg_method_parameter_shape_insert
+BEFORE INSERT ON method_parameter
+WHEN EXISTS (
+    SELECT 1
+    FROM method_parameter_term t
+    WHERE t.parameter_term = NEW.parameter_term
+      AND (
+          (t.value_kind = 'numeric'
+              AND (NEW.value_canonical IS NULL
+                   OR NEW.unit_canonical IS NULL
+                   OR (t.canonical_unit_code IS NOT NULL
+                       AND NEW.unit_canonical <> t.canonical_unit_code)))
+          OR (t.value_kind = 'controlled_text' AND NEW.value_term IS NULL)
+          OR (t.value_kind = 'text' AND trim(NEW.value_original_text) = '')
+      )
+)
+BEGIN
+    SELECT RAISE(ABORT, 'method parameter value does not satisfy its controlled term');
+END;
+
+CREATE TRIGGER trg_method_parameter_shape_update
+BEFORE UPDATE OF parameter_term, value_term, value_original_text,
+                 value_canonical, unit_canonical ON method_parameter
+WHEN EXISTS (
+    SELECT 1
+    FROM method_parameter_term t
+    WHERE t.parameter_term = NEW.parameter_term
+      AND (
+          (t.value_kind = 'numeric'
+              AND (NEW.value_canonical IS NULL
+                   OR NEW.unit_canonical IS NULL
+                   OR (t.canonical_unit_code IS NOT NULL
+                       AND NEW.unit_canonical <> t.canonical_unit_code)))
+          OR (t.value_kind = 'controlled_text' AND NEW.value_term IS NULL)
+          OR (t.value_kind = 'text' AND trim(NEW.value_original_text) = '')
+      )
+)
+BEGIN
+    SELECT RAISE(ABORT, 'method parameter value does not satisfy its controlled term');
+END;
+
+CREATE TRIGGER trg_used_method_parameter_insert
+BEFORE INSERT ON method_parameter
+WHEN EXISTS (SELECT 1 FROM observation WHERE method_run_id = NEW.method_run_id)
+  OR EXISTS (SELECT 1 FROM observation_series WHERE method_run_id = NEW.method_run_id)
+  OR EXISTS (SELECT 1 FROM dispersion_batch WHERE preparation_method_run_id = NEW.method_run_id)
+  OR EXISTS (SELECT 1 FROM application_run WHERE method_run_id = NEW.method_run_id)
+BEGIN
+    SELECT RAISE(ABORT, 'method parameters cannot be added after the method run is used');
+END;
+
+CREATE TRIGGER trg_used_method_parameter_update
+BEFORE UPDATE ON method_parameter
+WHEN EXISTS (SELECT 1 FROM observation WHERE method_run_id IN (OLD.method_run_id, NEW.method_run_id))
+  OR EXISTS (SELECT 1 FROM observation_series WHERE method_run_id IN (OLD.method_run_id, NEW.method_run_id))
+  OR EXISTS (SELECT 1 FROM dispersion_batch WHERE preparation_method_run_id IN (OLD.method_run_id, NEW.method_run_id))
+  OR EXISTS (SELECT 1 FROM application_run WHERE method_run_id IN (OLD.method_run_id, NEW.method_run_id))
+BEGIN
+    SELECT RAISE(ABORT, 'parameters of a used method run are immutable');
+END;
+
+CREATE TRIGGER trg_used_method_parameter_delete
+BEFORE DELETE ON method_parameter
+WHEN EXISTS (SELECT 1 FROM observation WHERE method_run_id = OLD.method_run_id)
+  OR EXISTS (SELECT 1 FROM observation_series WHERE method_run_id = OLD.method_run_id)
+  OR EXISTS (SELECT 1 FROM dispersion_batch WHERE preparation_method_run_id = OLD.method_run_id)
+  OR EXISTS (SELECT 1 FROM application_run WHERE method_run_id = OLD.method_run_id)
+BEGIN
+    SELECT RAISE(ABORT, 'parameters of a used method run are immutable');
+END;
+
+CREATE TRIGGER trg_observation_readiness_insert
+BEFORE INSERT ON observation
+WHEN NEW.record_state IN ('curated', 'model_ready')
+BEGIN
+    SELECT CASE
+        WHEN NOT EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id AND p.active = 1
+        ) THEN RAISE(ABORT, 'inactive property terms cannot enter curated states')
+        WHEN NEW.record_state = 'model_ready' AND NOT EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id AND p.model_ready_allowed = 1
+        ) THEN RAISE(ABORT, 'generic or deprecated property term is not model-ready')
+        WHEN EXISTS (
+            SELECT 1
+            FROM property_condition_requirement r
+            WHERE r.property_id = NEW.property_id
+              AND (r.required_for_state = 'curated' OR NEW.record_state = 'model_ready')
+              AND NOT EXISTS (
+                  SELECT 1 FROM condition_value cv
+                  WHERE cv.condition_set_id = NEW.condition_set_id
+                    AND cv.condition_term_id = r.condition_term_id
+                    AND cv.value_status IN ('reported', 'derived')
+                    AND cv.value_canonical IS NOT NULL
+                    AND (r.target_entity_required = 0 OR cv.applies_to_entity_id IS NOT NULL)
+                    AND (r.basis_required = 0
+                         OR (cv.basis_or_scale IS NOT NULL AND trim(cv.basis_or_scale) <> ''))
+              )
+        ) THEN RAISE(ABORT, 'property is missing a required controlled condition')
+        WHEN EXISTS (
+            SELECT 1
+            FROM property_method_parameter_requirement r
+            WHERE r.property_id = NEW.property_id
+              AND (r.required_for_state = 'curated' OR NEW.record_state = 'model_ready')
+              AND NOT EXISTS (
+                  SELECT 1 FROM method_parameter mp
+                  WHERE mp.method_run_id = NEW.method_run_id
+                    AND mp.parameter_term = r.parameter_term
+              )
+        ) THEN RAISE(ABORT, 'property is missing a required controlled method qualifier')
+        WHEN EXISTS (
+            SELECT 1
+            FROM property_result_basis_rule r
+            WHERE r.property_id = NEW.property_id
+              AND (r.required_for_state = 'curated' OR NEW.record_state = 'model_ready')
+        ) AND NOT EXISTS (
+            SELECT 1
+            FROM property_result_basis_rule r
+            WHERE r.property_id = NEW.property_id
+              AND r.result_basis = NEW.result_basis
+              AND (r.required_for_state = 'curated' OR NEW.record_state = 'model_ready')
+              AND (r.measurand_entity_required = 0 OR NEW.measurand_entity_id IS NOT NULL)
+        ) THEN RAISE(ABORT, 'property requires an allowed result basis and measurand identity')
+        WHEN NEW.result_basis = 'method_defined'
+         AND (NEW.result_basis_description IS NULL OR trim(NEW.result_basis_description) = '')
+         THEN RAISE(ABORT, 'method_defined result basis requires a description')
+        WHEN NEW.property_id = 'adsorption_amount_static'
+         AND (NEW.statistic_kind = 'fitted_value' OR NOT EXISTS (
+             SELECT 1 FROM condition_value cv
+             WHERE cv.condition_set_id = NEW.condition_set_id
+               AND cv.condition_term_id = 'component_concentration'
+               AND cv.applies_to_entity_id = NEW.measurand_entity_id
+         )) THEN RAISE(ABORT, 'equilibrium adsorption loading requires measured loading and matching adsorbate concentration')
+        WHEN NEW.property_id = 'yield_stress_herschel_bulkley'
+         AND NOT EXISTS (
+             SELECT 1 FROM method_parameter mp
+             WHERE mp.method_run_id = NEW.method_run_id
+               AND mp.parameter_term = 'rheological_model'
+               AND mp.value_term = 'herschel_bulkley'
+         ) THEN RAISE(ABORT, 'Herschel-Bulkley yield stress requires the matching controlled model qualifier')
+        WHEN NEW.property_id IN ('contact_angle_static', 'contact_angle_advancing', 'contact_angle_receding')
+         AND (
+             NOT EXISTS (
+                 SELECT 1 FROM contact_angle_context c
+                 WHERE c.context_id = NEW.context_id
+                   AND c.geometry <> 'unspecified'
+                   AND c.baseline_fitting_method IS NOT NULL
+                   AND trim(c.baseline_fitting_method) <> ''
+             )
+             OR NOT EXISTS (
+                 SELECT 1
+                 FROM context_participant cp
+                 JOIN surface_specimen ss ON ss.entity_id = cp.entity_id
+                 WHERE cp.context_id = NEW.context_id
+                   AND cp.participant_role = 'solid_surface'
+                   AND ss.preparation_protocol IS NOT NULL
+                   AND trim(ss.preparation_protocol) <> ''
+             )
+         ) THEN RAISE(ABORT, 'curated contact angle requires geometry, baseline fit and surface preparation')
+        WHEN NEW.property_id IN ('emulsion_droplet_diameter_d32', 'emulsion_separated_volume_fraction')
+         AND NOT EXISTS (
+             SELECT 1
+             FROM context_participant cp
+             LEFT JOIN formulation f ON f.entity_id = cp.entity_id
+             LEFT JOIN phase_sample ps ON ps.entity_id = cp.entity_id
+             LEFT JOIN dispersion_batch db ON db.entity_id = cp.entity_id
+             LEFT JOIN formulation df ON df.entity_id = db.formulation_id
+             WHERE cp.context_id = NEW.context_id
+               AND cp.participant_role = 'bulk_fluid'
+               AND (f.formulation_class = 'emulsion'
+                    OR ps.physical_state = 'emulsion'
+                    OR df.formulation_class = 'emulsion')
+         ) THEN RAISE(ABORT, 'emulsion property requires an emulsion bulk-fluid subject')
+    END;
+END;
+
+CREATE TRIGGER trg_observation_readiness_update
+BEFORE UPDATE ON observation
+WHEN NEW.record_state IN ('curated', 'model_ready')
+BEGIN
+    SELECT CASE
+        WHEN NOT EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id AND p.active = 1
+        ) THEN RAISE(ABORT, 'inactive property terms cannot enter curated states')
+        WHEN NEW.record_state = 'model_ready' AND NOT EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id AND p.model_ready_allowed = 1
+        ) THEN RAISE(ABORT, 'generic or deprecated property term is not model-ready')
+        WHEN EXISTS (
+            SELECT 1
+            FROM property_condition_requirement r
+            WHERE r.property_id = NEW.property_id
+              AND (r.required_for_state = 'curated' OR NEW.record_state = 'model_ready')
+              AND NOT EXISTS (
+                  SELECT 1 FROM condition_value cv
+                  WHERE cv.condition_set_id = NEW.condition_set_id
+                    AND cv.condition_term_id = r.condition_term_id
+                    AND cv.value_status IN ('reported', 'derived')
+                    AND cv.value_canonical IS NOT NULL
+                    AND (r.target_entity_required = 0 OR cv.applies_to_entity_id IS NOT NULL)
+                    AND (r.basis_required = 0
+                         OR (cv.basis_or_scale IS NOT NULL AND trim(cv.basis_or_scale) <> ''))
+              )
+        ) THEN RAISE(ABORT, 'property is missing a required controlled condition')
+        WHEN EXISTS (
+            SELECT 1
+            FROM property_method_parameter_requirement r
+            WHERE r.property_id = NEW.property_id
+              AND (r.required_for_state = 'curated' OR NEW.record_state = 'model_ready')
+              AND NOT EXISTS (
+                  SELECT 1 FROM method_parameter mp
+                  WHERE mp.method_run_id = NEW.method_run_id
+                    AND mp.parameter_term = r.parameter_term
+              )
+        ) THEN RAISE(ABORT, 'property is missing a required controlled method qualifier')
+        WHEN EXISTS (
+            SELECT 1
+            FROM property_result_basis_rule r
+            WHERE r.property_id = NEW.property_id
+              AND (r.required_for_state = 'curated' OR NEW.record_state = 'model_ready')
+        ) AND NOT EXISTS (
+            SELECT 1
+            FROM property_result_basis_rule r
+            WHERE r.property_id = NEW.property_id
+              AND r.result_basis = NEW.result_basis
+              AND (r.required_for_state = 'curated' OR NEW.record_state = 'model_ready')
+              AND (r.measurand_entity_required = 0 OR NEW.measurand_entity_id IS NOT NULL)
+        ) THEN RAISE(ABORT, 'property requires an allowed result basis and measurand identity')
+        WHEN NEW.result_basis = 'method_defined'
+         AND (NEW.result_basis_description IS NULL OR trim(NEW.result_basis_description) = '')
+         THEN RAISE(ABORT, 'method_defined result basis requires a description')
+        WHEN NEW.property_id = 'adsorption_amount_static'
+         AND (NEW.statistic_kind = 'fitted_value' OR NOT EXISTS (
+             SELECT 1 FROM condition_value cv
+             WHERE cv.condition_set_id = NEW.condition_set_id
+               AND cv.condition_term_id = 'component_concentration'
+               AND cv.applies_to_entity_id = NEW.measurand_entity_id
+         )) THEN RAISE(ABORT, 'equilibrium adsorption loading requires measured loading and matching adsorbate concentration')
+        WHEN NEW.property_id = 'yield_stress_herschel_bulkley'
+         AND NOT EXISTS (
+             SELECT 1 FROM method_parameter mp
+             WHERE mp.method_run_id = NEW.method_run_id
+               AND mp.parameter_term = 'rheological_model'
+               AND mp.value_term = 'herschel_bulkley'
+         ) THEN RAISE(ABORT, 'Herschel-Bulkley yield stress requires the matching controlled model qualifier')
+        WHEN NEW.property_id IN ('contact_angle_static', 'contact_angle_advancing', 'contact_angle_receding')
+         AND (
+             NOT EXISTS (
+                 SELECT 1 FROM contact_angle_context c
+                 WHERE c.context_id = NEW.context_id
+                   AND c.geometry <> 'unspecified'
+                   AND c.baseline_fitting_method IS NOT NULL
+                   AND trim(c.baseline_fitting_method) <> ''
+             )
+             OR NOT EXISTS (
+                 SELECT 1
+                 FROM context_participant cp
+                 JOIN surface_specimen ss ON ss.entity_id = cp.entity_id
+                 WHERE cp.context_id = NEW.context_id
+                   AND cp.participant_role = 'solid_surface'
+                   AND ss.preparation_protocol IS NOT NULL
+                   AND trim(ss.preparation_protocol) <> ''
+             )
+         ) THEN RAISE(ABORT, 'curated contact angle requires geometry, baseline fit and surface preparation')
+        WHEN NEW.property_id IN ('emulsion_droplet_diameter_d32', 'emulsion_separated_volume_fraction')
+         AND NOT EXISTS (
+             SELECT 1
+             FROM context_participant cp
+             LEFT JOIN formulation f ON f.entity_id = cp.entity_id
+             LEFT JOIN phase_sample ps ON ps.entity_id = cp.entity_id
+             LEFT JOIN dispersion_batch db ON db.entity_id = cp.entity_id
+             LEFT JOIN formulation df ON df.entity_id = db.formulation_id
+             WHERE cp.context_id = NEW.context_id
+               AND cp.participant_role = 'bulk_fluid'
+               AND (f.formulation_class = 'emulsion'
+                    OR ps.physical_state = 'emulsion'
+                    OR df.formulation_class = 'emulsion')
+         ) THEN RAISE(ABORT, 'emulsion property requires an emulsion bulk-fluid subject')
+    END;
+END;
+
+CREATE TRIGGER trg_observation_semantics_insert
+BEFORE INSERT ON observation
+BEGIN
+    SELECT CASE
+        WHEN NEW.record_state <> 'staging'
+         AND NEW.unit_canonical <> (
+            SELECT canonical_unit_code FROM property_term WHERE property_id = NEW.property_id
+         ) THEN RAISE(ABORT, 'canonical unit does not match property term')
+        WHEN NEW.record_state <> 'staging'
+         AND (SELECT required_coordinate_term FROM property_term WHERE property_id = NEW.property_id) IS NOT NULL
+         AND (
+            NEW.series_id IS NULL
+            OR NOT EXISTS (
+                SELECT 1 FROM observation_series s
+                JOIN property_term p ON p.property_id = NEW.property_id
+                WHERE s.series_id = NEW.series_id
+                  AND s.primary_coordinate_term = p.required_coordinate_term
+            )
+         ) THEN RAISE(ABORT, 'property requires a series with the prescribed coordinate')
+        WHEN NEW.series_id IS NOT NULL
+         AND NEW.coordinate_unit_canonical IS NOT NULL
+         AND NEW.coordinate_unit_canonical <> (
+            SELECT coordinate_unit_canonical FROM observation_series WHERE series_id = NEW.series_id
+         ) THEN RAISE(ABORT, 'canonical coordinate unit does not match series definition')
+        WHEN NEW.series_id IS NOT NULL
+         AND NOT EXISTS (
+            SELECT 1
+            FROM observation_series s
+            JOIN condition_value cv
+              ON cv.condition_value_id = NEW.coordinate_condition_value_id
+             AND cv.condition_set_id = NEW.condition_set_id
+             AND cv.condition_term_id = s.primary_coordinate_term
+            WHERE s.series_id = NEW.series_id
+              AND cv.value_status IN ('reported', 'derived')
+              AND cv.value_original IS NEW.coordinate_value_original
+              AND cv.unit_original IS NEW.coordinate_unit_original
+              AND (NEW.record_state = 'staging'
+                   OR (cv.value_canonical IS NEW.coordinate_value_canonical
+                       AND cv.unit_canonical IS NEW.coordinate_unit_canonical))
+         ) THEN RAISE(ABORT, 'series coordinate must reference a matching condition value')
+        WHEN NEW.record_state <> 'staging'
+         AND NEW.series_id IS NOT NULL
+         AND (SELECT primary_coordinate_term FROM observation_series WHERE series_id = NEW.series_id)
+             = 'component_concentration'
+         AND NOT EXISTS (
+            SELECT 1
+            FROM condition_value cv
+            WHERE cv.condition_value_id = NEW.coordinate_condition_value_id
+              AND cv.applies_to_entity_id IS NOT NULL
+              AND cv.basis_or_scale IS NOT NULL
+              AND trim(cv.basis_or_scale) <> ''
+         ) THEN RAISE(ABORT, 'component concentration requires a target entity and explicit basis')
+        WHEN NEW.record_state <> 'staging'
+         AND NEW.statistic_kind = 'model_prediction'
+         AND NOT EXISTS (
+            SELECT 1 FROM ml_prediction_detail
+            WHERE observation_id = NEW.observation_id
+         ) THEN RAISE(ABORT, 'curated ML prediction requires ml_prediction_detail')
+        WHEN NEW.value_kind <> 'censored'
+         AND COALESCE(NEW.value_canonical, NEW.lower_canonical) IS NOT NULL
+         AND EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id
+              AND p.canonical_min IS NOT NULL
+              AND (COALESCE(NEW.value_canonical, NEW.lower_canonical) < p.canonical_min
+                   OR (p.min_inclusive = 0
+                       AND COALESCE(NEW.value_canonical, NEW.lower_canonical) = p.canonical_min))
+         ) THEN RAISE(ABORT, 'canonical value is below the property domain')
+        WHEN NEW.value_kind <> 'censored'
+         AND COALESCE(NEW.value_canonical, NEW.upper_canonical) IS NOT NULL
+         AND EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id
+              AND p.canonical_max IS NOT NULL
+              AND (COALESCE(NEW.value_canonical, NEW.upper_canonical) > p.canonical_max
+                   OR (p.max_inclusive = 0
+                       AND COALESCE(NEW.value_canonical, NEW.upper_canonical) = p.canonical_max))
+         ) THEN RAISE(ABORT, 'canonical value is above the property domain')
+        WHEN NEW.value_kind = 'censored'
+         AND NEW.value_qualifier IN ('less_than', 'less_or_equal')
+         AND EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id
+              AND p.canonical_min IS NOT NULL
+              AND (
+                  NEW.value_canonical < p.canonical_min
+                  OR (NEW.value_canonical = p.canonical_min
+                      AND (NEW.value_qualifier = 'less_than' OR p.min_inclusive = 0))
+              )
+         ) THEN RAISE(ABORT, 'upper-censored threshold has no feasible intersection with the property domain')
+        WHEN NEW.value_kind = 'censored'
+         AND NEW.value_qualifier IN ('greater_than', 'greater_or_equal')
+         AND EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id
+              AND p.canonical_max IS NOT NULL
+              AND (
+                  NEW.value_canonical > p.canonical_max
+                  OR (NEW.value_canonical = p.canonical_max
+                      AND (NEW.value_qualifier = 'greater_than' OR p.max_inclusive = 0))
+              )
+         ) THEN RAISE(ABORT, 'lower-censored threshold has no feasible intersection with the property domain')
+    END;
+END;
+
+CREATE TRIGGER trg_observation_semantics_update
+BEFORE UPDATE OF property_id, condition_set_id, method_run_id, statistic_kind,
+                 value_kind, value_qualifier,
+                 record_state, unit_canonical, value_canonical,
+                 lower_canonical, upper_canonical, series_id,
+                 coordinate_condition_value_id, coordinate_value_original,
+                 coordinate_unit_original, coordinate_value_canonical,
+                 coordinate_unit_canonical, measurand_entity_id, result_basis ON observation
+BEGIN
+    SELECT CASE
+        WHEN NEW.record_state <> 'staging'
+         AND NEW.unit_canonical <> (
+            SELECT canonical_unit_code FROM property_term WHERE property_id = NEW.property_id
+         ) THEN RAISE(ABORT, 'canonical unit does not match property term')
+        WHEN NEW.record_state <> 'staging'
+         AND (SELECT required_coordinate_term FROM property_term WHERE property_id = NEW.property_id) IS NOT NULL
+         AND (
+            NEW.series_id IS NULL
+            OR NOT EXISTS (
+                SELECT 1 FROM observation_series s
+                JOIN property_term p ON p.property_id = NEW.property_id
+                WHERE s.series_id = NEW.series_id
+                  AND s.primary_coordinate_term = p.required_coordinate_term
+            )
+         ) THEN RAISE(ABORT, 'property requires a series with the prescribed coordinate')
+        WHEN NEW.series_id IS NOT NULL
+         AND NEW.coordinate_unit_canonical IS NOT NULL
+         AND NEW.coordinate_unit_canonical <> (
+            SELECT coordinate_unit_canonical FROM observation_series WHERE series_id = NEW.series_id
+         ) THEN RAISE(ABORT, 'canonical coordinate unit does not match series definition')
+        WHEN NEW.series_id IS NOT NULL
+         AND NOT EXISTS (
+            SELECT 1
+            FROM observation_series s
+            JOIN condition_value cv
+              ON cv.condition_value_id = NEW.coordinate_condition_value_id
+             AND cv.condition_set_id = NEW.condition_set_id
+             AND cv.condition_term_id = s.primary_coordinate_term
+            WHERE s.series_id = NEW.series_id
+              AND cv.value_status IN ('reported', 'derived')
+              AND cv.value_original IS NEW.coordinate_value_original
+              AND cv.unit_original IS NEW.coordinate_unit_original
+              AND (NEW.record_state = 'staging'
+                   OR (cv.value_canonical IS NEW.coordinate_value_canonical
+                       AND cv.unit_canonical IS NEW.coordinate_unit_canonical))
+         ) THEN RAISE(ABORT, 'series coordinate must reference a matching condition value')
+        WHEN NEW.record_state <> 'staging'
+         AND NEW.series_id IS NOT NULL
+         AND (SELECT primary_coordinate_term FROM observation_series WHERE series_id = NEW.series_id)
+             = 'component_concentration'
+         AND NOT EXISTS (
+            SELECT 1
+            FROM condition_value cv
+            WHERE cv.condition_value_id = NEW.coordinate_condition_value_id
+              AND cv.applies_to_entity_id IS NOT NULL
+              AND cv.basis_or_scale IS NOT NULL
+              AND trim(cv.basis_or_scale) <> ''
+         ) THEN RAISE(ABORT, 'component concentration requires a target entity and explicit basis')
+        WHEN NEW.record_state <> 'staging'
+         AND NEW.statistic_kind = 'model_prediction'
+         AND NOT EXISTS (
+            SELECT 1
+            FROM ml_prediction_detail pd
+            JOIN ml_model_run mmr ON mmr.model_run_id = pd.model_run_id
+            WHERE pd.observation_id = NEW.observation_id
+              AND mmr.method_run_id = NEW.method_run_id
+         ) THEN RAISE(ABORT, 'curated ML prediction requires matching ml_prediction_detail')
+        WHEN EXISTS (
+            SELECT 1
+            FROM ml_prediction_detail pd
+            JOIN ml_model_run mmr ON mmr.model_run_id = pd.model_run_id
+            WHERE pd.observation_id = NEW.observation_id
+              AND (NEW.statistic_kind <> 'model_prediction'
+                   OR mmr.method_run_id <> NEW.method_run_id)
+         ) THEN RAISE(ABORT, 'prediction detail must match observation method and statistic kind')
+        WHEN NEW.value_kind <> 'censored'
+         AND COALESCE(NEW.value_canonical, NEW.lower_canonical) IS NOT NULL
+         AND EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id
+              AND p.canonical_min IS NOT NULL
+              AND (COALESCE(NEW.value_canonical, NEW.lower_canonical) < p.canonical_min
+                   OR (p.min_inclusive = 0
+                       AND COALESCE(NEW.value_canonical, NEW.lower_canonical) = p.canonical_min))
+         ) THEN RAISE(ABORT, 'canonical value is below the property domain')
+        WHEN NEW.value_kind <> 'censored'
+         AND COALESCE(NEW.value_canonical, NEW.upper_canonical) IS NOT NULL
+         AND EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id
+              AND p.canonical_max IS NOT NULL
+              AND (COALESCE(NEW.value_canonical, NEW.upper_canonical) > p.canonical_max
+                   OR (p.max_inclusive = 0
+                       AND COALESCE(NEW.value_canonical, NEW.upper_canonical) = p.canonical_max))
+         ) THEN RAISE(ABORT, 'canonical value is above the property domain')
+        WHEN NEW.value_kind = 'censored'
+         AND NEW.value_qualifier IN ('less_than', 'less_or_equal')
+         AND EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id
+              AND p.canonical_min IS NOT NULL
+              AND (
+                  NEW.value_canonical < p.canonical_min
+                  OR (NEW.value_canonical = p.canonical_min
+                      AND (NEW.value_qualifier = 'less_than' OR p.min_inclusive = 0))
+              )
+         ) THEN RAISE(ABORT, 'upper-censored threshold has no feasible intersection with the property domain')
+        WHEN NEW.value_kind = 'censored'
+         AND NEW.value_qualifier IN ('greater_than', 'greater_or_equal')
+         AND EXISTS (
+            SELECT 1 FROM property_term p
+            WHERE p.property_id = NEW.property_id
+              AND p.canonical_max IS NOT NULL
+              AND (
+                  NEW.value_canonical > p.canonical_max
+                  OR (NEW.value_canonical = p.canonical_max
+                      AND (NEW.value_qualifier = 'greater_than' OR p.max_inclusive = 0))
+              )
+         ) THEN RAISE(ABORT, 'lower-censored threshold has no feasible intersection with the property domain')
+    END;
+END;
+
+CREATE TRIGGER trg_observation_original_immutable
+BEFORE UPDATE OF value_kind, value_qualifier, raw_value_text,
+                 value_original, lower_original, upper_original,
+                 unit_original, source_assertion_id ON observation
+BEGIN
+    SELECT RAISE(ABORT, 'source-native observation fields are immutable; insert a superseding observation');
+END;
+
+CREATE TRIGGER trg_source_assertion_evidence_lock
+BEFORE UPDATE OF source_id, exact_locator, reported_property_label,
+                 reported_value_text, ingestion_route, extraction_mode,
+                 source_excerpt_hash ON source_assertion
+WHEN EXISTS (SELECT 1 FROM observation WHERE source_assertion_id = OLD.assertion_id)
+  OR EXISTS (SELECT 1 FROM condition_value WHERE source_assertion_id = OLD.assertion_id)
+  OR EXISTS (SELECT 1 FROM observation_series WHERE source_assertion_id = OLD.assertion_id)
+  OR EXISTS (SELECT 1 FROM uncertainty_component WHERE source_assertion_id = OLD.assertion_id)
+BEGIN
+    SELECT RAISE(ABORT, 'referenced source evidence is immutable; create a new assertion');
+END;
+
+CREATE TRIGGER trg_source_identity_lock
+BEFORE UPDATE OF title, source_type, doi, url, bibliographic_version,
+                 content_sha256 ON source
+WHEN EXISTS (SELECT 1 FROM source_assertion WHERE source_id = OLD.source_id)
+BEGIN
+    SELECT RAISE(ABORT, 'source identity is immutable after an assertion cites it');
+END;
+
+CREATE TRIGGER trg_dataset_member_insert_guard
+BEFORE INSERT ON dataset_member
+WHEN NOT EXISTS (
+        SELECT 1 FROM dataset_snapshot
+        WHERE snapshot_id = NEW.snapshot_id AND snapshot_state = 'draft'
+     )
+  OR NOT EXISTS (
+        SELECT 1 FROM observation
+        WHERE observation_id = NEW.observation_id AND record_state = 'model_ready'
+     )
+BEGIN
+    SELECT RAISE(ABORT, 'only model_ready observations may be added to a draft snapshot');
+END;
+
+CREATE TRIGGER trg_dataset_member_update_guard
+BEFORE UPDATE ON dataset_member
+WHEN NOT EXISTS (
+        SELECT 1 FROM dataset_snapshot
+        WHERE snapshot_id = OLD.snapshot_id AND snapshot_state = 'draft'
+     )
+  OR NOT EXISTS (
+        SELECT 1 FROM dataset_snapshot
+        WHERE snapshot_id = NEW.snapshot_id AND snapshot_state = 'draft'
+     )
+  OR NOT EXISTS (
+        SELECT 1 FROM observation
+        WHERE observation_id = NEW.observation_id AND record_state = 'model_ready'
+     )
+BEGIN
+    SELECT RAISE(ABORT, 'snapshot membership is mutable only while draft and model_ready');
+END;
+
+CREATE TRIGGER trg_dataset_member_delete_guard
+BEFORE DELETE ON dataset_member
+WHEN (SELECT snapshot_state FROM dataset_snapshot WHERE snapshot_id = OLD.snapshot_id) <> 'draft'
+BEGIN
+    SELECT RAISE(ABORT, 'frozen snapshot membership is immutable');
+END;
+
+CREATE TRIGGER trg_dataset_snapshot_freeze_guard
+BEFORE UPDATE OF snapshot_state, finalized_at ON dataset_snapshot
+WHEN NEW.snapshot_state = 'frozen'
+ AND OLD.snapshot_state = 'draft'
+ AND (
+    NOT EXISTS (SELECT 1 FROM dataset_member WHERE snapshot_id = OLD.snapshot_id)
+    OR EXISTS (
+        SELECT 1
+        FROM dataset_member dm
+        JOIN observation o ON o.observation_id = dm.observation_id
+        WHERE dm.snapshot_id = OLD.snapshot_id
+          AND o.record_state <> 'model_ready'
+    )
+ )
+BEGIN
+    SELECT RAISE(ABORT, 'a frozen snapshot requires at least one model_ready member and no ineligible members');
+END;
+
+CREATE TRIGGER trg_dataset_snapshot_insert_draft
+BEFORE INSERT ON dataset_snapshot
+WHEN NEW.snapshot_state <> 'draft' OR NEW.finalized_at IS NOT NULL
+BEGIN
+    SELECT RAISE(ABORT, 'a dataset snapshot must be inserted as draft');
+END;
+
+CREATE TRIGGER trg_dataset_snapshot_frozen_update
+BEFORE UPDATE ON dataset_snapshot
+WHEN OLD.snapshot_state = 'frozen'
+BEGIN
+    SELECT RAISE(ABORT, 'a frozen dataset snapshot is immutable');
+END;
+
+CREATE TRIGGER trg_dataset_snapshot_frozen_delete
+BEFORE DELETE ON dataset_snapshot
+WHEN OLD.snapshot_state = 'frozen'
+BEGIN
+    SELECT RAISE(ABORT, 'a frozen dataset snapshot is immutable');
+END;
+
+CREATE TRIGGER trg_split_requires_frozen_snapshot
+BEFORE INSERT ON split_definition
+WHEN NOT EXISTS (
+    SELECT 1 FROM dataset_snapshot
+    WHERE snapshot_id = NEW.snapshot_id AND snapshot_state = 'frozen'
+)
+BEGIN
+    SELECT RAISE(ABORT, 'split definition requires a frozen dataset snapshot');
+END;
+
+CREATE TRIGGER trg_split_requires_frozen_snapshot_update
+BEFORE UPDATE OF snapshot_id ON split_definition
+WHEN NOT EXISTS (
+    SELECT 1 FROM dataset_snapshot
+    WHERE snapshot_id = NEW.snapshot_id AND snapshot_state = 'frozen'
+)
+BEGIN
+    SELECT RAISE(ABORT, 'split definition requires a frozen dataset snapshot');
+END;
+
+CREATE TRIGGER trg_frozen_member_state_lock
+BEFORE UPDATE OF record_state ON observation
+WHEN NEW.record_state <> 'model_ready'
+ AND EXISTS (
+    SELECT 1
+    FROM dataset_member dm
+    JOIN dataset_snapshot ds ON ds.snapshot_id = dm.snapshot_id
+    WHERE dm.observation_id = OLD.observation_id
+      AND ds.snapshot_state = 'frozen'
+ )
+BEGIN
+    SELECT RAISE(ABORT, 'an observation in a frozen snapshot must remain model_ready');
+END;
+
+CREATE TRIGGER trg_frozen_member_observation_lock
+BEFORE UPDATE ON observation
+WHEN EXISTS (
+    SELECT 1
+    FROM dataset_member dm
+    JOIN dataset_snapshot ds ON ds.snapshot_id = dm.snapshot_id
+    WHERE dm.observation_id = OLD.observation_id
+      AND ds.snapshot_state = 'frozen'
+)
+BEGIN
+    SELECT RAISE(ABORT, 'an observation in a frozen snapshot is immutable');
+END;
+
+CREATE TRIGGER trg_frozen_member_uncertainty_insert
+BEFORE INSERT ON uncertainty_component
+WHEN EXISTS (
+    SELECT 1
+    FROM dataset_member dm
+    JOIN dataset_snapshot ds ON ds.snapshot_id = dm.snapshot_id
+    WHERE dm.observation_id = NEW.observation_id
+      AND ds.snapshot_state = 'frozen'
+)
+BEGIN
+    SELECT RAISE(ABORT, 'uncertainty of a frozen snapshot member is immutable');
+END;
+
+CREATE TRIGGER trg_frozen_member_uncertainty_update
+BEFORE UPDATE ON uncertainty_component
+WHEN EXISTS (
+    SELECT 1
+    FROM dataset_member dm
+    JOIN dataset_snapshot ds ON ds.snapshot_id = dm.snapshot_id
+    WHERE dm.observation_id = OLD.observation_id
+      AND ds.snapshot_state = 'frozen'
+)
+BEGIN
+    SELECT RAISE(ABORT, 'uncertainty of a frozen snapshot member is immutable');
+END;
+
+CREATE TRIGGER trg_frozen_member_uncertainty_delete
+BEFORE DELETE ON uncertainty_component
+WHEN EXISTS (
+    SELECT 1
+    FROM dataset_member dm
+    JOIN dataset_snapshot ds ON ds.snapshot_id = dm.snapshot_id
+    WHERE dm.observation_id = OLD.observation_id
+      AND ds.snapshot_state = 'frozen'
+)
+BEGIN
+    SELECT RAISE(ABORT, 'uncertainty of a frozen snapshot member is immutable');
+END;
+
+CREATE TRIGGER trg_split_group_leakage
+BEFORE INSERT ON split_assignment
+WHEN EXISTS (
+    SELECT 1 FROM split_assignment a
+    WHERE a.split_id = NEW.split_id
+      AND a.group_key = NEW.group_key
+      AND a.split_partition <> NEW.split_partition
+)
+BEGIN
+    SELECT RAISE(ABORT, 'the same disjoint group_key cannot occur in multiple split partitions');
+END;
+
+CREATE TRIGGER trg_split_group_leakage_update
+BEFORE UPDATE OF group_key, split_partition, split_id ON split_assignment
+WHEN EXISTS (
+    SELECT 1 FROM split_assignment a
+    WHERE a.split_id = NEW.split_id
+      AND a.observation_id <> OLD.observation_id
+      AND a.group_key = NEW.group_key
+      AND a.split_partition <> NEW.split_partition
+)
+BEGIN
+    SELECT RAISE(ABORT, 'the same disjoint group_key cannot occur in multiple split partitions');
+END;
+
+CREATE TRIGGER trg_split_definition_lock_after_model
+BEFORE UPDATE ON split_definition
+WHEN EXISTS (SELECT 1 FROM ml_model_run WHERE split_id = OLD.split_id)
+BEGIN
+    SELECT RAISE(ABORT, 'a split used by a model run is immutable');
+END;
+
+CREATE TRIGGER trg_split_definition_delete_after_model
+BEFORE DELETE ON split_definition
+WHEN EXISTS (SELECT 1 FROM ml_model_run WHERE split_id = OLD.split_id)
+BEGIN
+    SELECT RAISE(ABORT, 'a split used by a model run is immutable');
+END;
+
+CREATE TRIGGER trg_split_assignment_insert_after_model
+BEFORE INSERT ON split_assignment
+WHEN EXISTS (SELECT 1 FROM ml_model_run WHERE split_id = NEW.split_id)
+BEGIN
+    SELECT RAISE(ABORT, 'assignments of a split used by a model run are immutable');
+END;
+
+CREATE TRIGGER trg_split_assignment_update_after_model
+BEFORE UPDATE ON split_assignment
+WHEN EXISTS (SELECT 1 FROM ml_model_run WHERE split_id IN (OLD.split_id, NEW.split_id))
+BEGIN
+    SELECT RAISE(ABORT, 'assignments of a split used by a model run are immutable');
+END;
+
+CREATE TRIGGER trg_split_assignment_delete_after_model
+BEFORE DELETE ON split_assignment
+WHEN EXISTS (SELECT 1 FROM ml_model_run WHERE split_id = OLD.split_id)
+BEGIN
+    SELECT RAISE(ABORT, 'assignments of a split used by a model run are immutable');
+END;
+
+CREATE TRIGGER trg_ml_model_run_origin
+BEFORE INSERT ON ml_model_run
+WHEN NOT EXISTS (
+    SELECT 1 FROM method_run
+    WHERE method_run_id = NEW.method_run_id AND origin_kind = 'ml_prediction'
+)
+BEGIN
+    SELECT RAISE(ABORT, 'ml_model_run requires method_run origin_kind=ml_prediction');
+END;
+
+CREATE TRIGGER trg_ml_model_run_complete_split
+BEFORE INSERT ON ml_model_run
+WHEN NOT EXISTS (
+        SELECT 1 FROM split_assignment WHERE split_id = NEW.split_id
+     )
+  OR EXISTS (
+        SELECT 1
+        FROM dataset_member dm
+        WHERE dm.snapshot_id = NEW.dataset_snapshot_id
+          AND NOT EXISTS (
+              SELECT 1 FROM split_assignment sa
+              WHERE sa.split_id = NEW.split_id
+                AND sa.snapshot_id = NEW.dataset_snapshot_id
+                AND sa.observation_id = dm.observation_id
+          )
+     )
+BEGIN
+    SELECT RAISE(ABORT, 'ml_model_run requires a complete split assignment for every snapshot member');
+END;
+
+CREATE TRIGGER trg_ml_model_run_origin_update
+BEFORE UPDATE OF method_run_id ON ml_model_run
+WHEN NOT EXISTS (
+    SELECT 1 FROM method_run
+    WHERE method_run_id = NEW.method_run_id AND origin_kind = 'ml_prediction'
+)
+BEGIN
+    SELECT RAISE(ABORT, 'ml_model_run requires method_run origin_kind=ml_prediction');
+END;
+
+CREATE TRIGGER trg_ml_model_run_complete_split_update
+BEFORE UPDATE OF dataset_snapshot_id, split_id ON ml_model_run
+WHEN NOT EXISTS (
+        SELECT 1 FROM split_assignment WHERE split_id = NEW.split_id
+     )
+  OR EXISTS (
+        SELECT 1
+        FROM dataset_member dm
+        WHERE dm.snapshot_id = NEW.dataset_snapshot_id
+          AND NOT EXISTS (
+              SELECT 1 FROM split_assignment sa
+              WHERE sa.split_id = NEW.split_id
+                AND sa.snapshot_id = NEW.dataset_snapshot_id
+                AND sa.observation_id = dm.observation_id
+          )
+     )
+BEGIN
+    SELECT RAISE(ABORT, 'ml_model_run requires a complete split assignment for every snapshot member');
+END;
+
+CREATE TRIGGER trg_ml_method_origin_lock
+BEFORE UPDATE OF origin_kind ON method_run
+WHEN NEW.origin_kind <> OLD.origin_kind
+ AND (
+    EXISTS (SELECT 1 FROM ml_model_run WHERE method_run_id = OLD.method_run_id)
+    OR EXISTS (SELECT 1 FROM observation WHERE method_run_id = OLD.method_run_id)
+ )
+BEGIN
+    SELECT RAISE(ABORT, 'method origin is immutable after use');
+END;
+
+CREATE TRIGGER trg_ml_prediction_origin
+BEFORE INSERT ON ml_prediction_detail
+WHEN NOT EXISTS (
+    SELECT 1
+    FROM observation o
+    JOIN method_run mr ON mr.method_run_id = o.method_run_id
+    JOIN ml_model_run mmr
+      ON mmr.model_run_id = NEW.model_run_id
+     AND mmr.method_run_id = o.method_run_id
+    WHERE o.observation_id = NEW.observation_id
+      AND o.statistic_kind = 'model_prediction'
+      AND mr.origin_kind = 'ml_prediction'
+)
+BEGIN
+    SELECT RAISE(ABORT, 'prediction detail requires an ML-prediction observation');
+END;
+
+CREATE TRIGGER trg_ml_prediction_origin_update
+BEFORE UPDATE OF observation_id, model_run_id ON ml_prediction_detail
+WHEN NOT EXISTS (
+    SELECT 1
+    FROM observation o
+    JOIN method_run mr ON mr.method_run_id = o.method_run_id
+    JOIN ml_model_run mmr
+      ON mmr.model_run_id = NEW.model_run_id
+     AND mmr.method_run_id = o.method_run_id
+    WHERE o.observation_id = NEW.observation_id
+      AND o.statistic_kind = 'model_prediction'
+      AND mr.origin_kind = 'ml_prediction'
+)
+BEGIN
+    SELECT RAISE(ABORT, 'prediction detail requires the exact ML method run of its observation');
+END;
+
+CREATE TRIGGER trg_ml_model_run_lock_after_output
+BEFORE UPDATE ON ml_model_run
+WHEN EXISTS (SELECT 1 FROM ml_prediction_detail WHERE model_run_id = OLD.model_run_id)
+  OR EXISTS (SELECT 1 FROM domain_rule WHERE model_run_id = OLD.model_run_id)
+BEGIN
+    SELECT RAISE(ABORT, 'a model run with predictions or domain rules is immutable');
+END;
+
+CREATE TRIGGER trg_ml_prediction_lock_after_assessment
+BEFORE UPDATE ON ml_prediction_detail
+WHEN EXISTS (
+    SELECT 1 FROM domain_assessment
+    WHERE prediction_observation_id = OLD.observation_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'an assessed ML prediction link is immutable');
+END;
+
+CREATE TRIGGER trg_domain_assessment_decision
+BEFORE INSERT ON domain_assessment
+WHEN NEW.decision IN ('in_domain', 'out_of_domain')
+ AND EXISTS (
+    SELECT 1
+    FROM domain_rule r
+    WHERE r.domain_rule_id = NEW.domain_rule_id
+      AND r.model_run_id = NEW.model_run_id
+      AND (
+        (r.in_domain_operator = 'less_or_equal'
+            AND ((NEW.decision = 'in_domain' AND NEW.score > r.threshold_low)
+              OR (NEW.decision = 'out_of_domain' AND NEW.score <= r.threshold_low)))
+        OR
+        (r.in_domain_operator = 'greater_or_equal'
+            AND ((NEW.decision = 'in_domain' AND NEW.score < r.threshold_low)
+              OR (NEW.decision = 'out_of_domain' AND NEW.score >= r.threshold_low)))
+        OR
+        (r.in_domain_operator = 'between'
+            AND ((NEW.decision = 'in_domain'
+                    AND (NEW.score < r.threshold_low OR NEW.score > r.threshold_high))
+              OR (NEW.decision = 'out_of_domain'
+                    AND NEW.score BETWEEN r.threshold_low AND r.threshold_high)))
+      )
+ )
+BEGIN
+    SELECT RAISE(ABORT, 'domain decision contradicts the versioned threshold rule');
+END;
+
+CREATE TRIGGER trg_domain_assessment_immutable
+BEFORE UPDATE ON domain_assessment
+BEGIN
+    SELECT RAISE(ABORT, 'domain assessments are immutable; create a replacement assessment');
+END;
+
+CREATE TRIGGER trg_domain_rule_lock_update
+BEFORE UPDATE ON domain_rule
+WHEN EXISTS (SELECT 1 FROM domain_assessment WHERE domain_rule_id = OLD.domain_rule_id)
+BEGIN
+    SELECT RAISE(ABORT, 'an assessed applicability-domain rule is immutable');
+END;
+
+CREATE TRIGGER trg_domain_rule_lock_delete
+BEFORE DELETE ON domain_rule
+WHEN EXISTS (SELECT 1 FROM domain_assessment WHERE domain_rule_id = OLD.domain_rule_id)
+BEGIN
+    SELECT RAISE(ABORT, 'an assessed applicability-domain rule is immutable');
+END;
+
+CREATE INDEX idx_entity_type ON entity(entity_type);
+CREATE INDEX idx_formulation_component_formulation ON formulation_component(formulation_id);
+CREATE INDEX idx_context_participant_entity ON context_participant(entity_id);
+CREATE INDEX idx_condition_value_set_term ON condition_value(condition_set_id, condition_term_id);
+CREATE INDEX idx_source_doi ON source(doi);
+CREATE INDEX idx_assertion_source ON source_assertion(source_id);
+CREATE INDEX idx_method_origin ON method_run(origin_kind);
+CREATE INDEX idx_observation_property ON observation(property_id);
+CREATE INDEX idx_observation_context ON observation(context_id, context_type);
+CREATE INDEX idx_observation_source_assertion ON observation(source_assertion_id);
+CREATE INDEX idx_observation_method ON observation(method_run_id);
+CREATE INDEX idx_observation_series ON observation(series_id, series_point_index);
+CREATE INDEX idx_observation_record_state ON observation(record_state, review_status);
+CREATE INDEX idx_uncertainty_observation ON uncertainty_component(observation_id);
+CREATE INDEX idx_dataset_member_observation ON dataset_member(observation_id);
+CREATE INDEX idx_split_partition ON split_assignment(split_id, split_partition);
+CREATE INDEX idx_ml_model_run_model ON ml_model_run(model_id);
+CREATE INDEX idx_domain_assessment_prediction ON domain_assessment(prediction_observation_id);
+CREATE UNIQUE INDEX uq_source_assertion_fingerprint
+    ON source_assertion (
+        source_id,
+        exact_locator,
+        ifnull(reported_property_label, ''),
+        ifnull(reported_value_text, '')
+    );
+CREATE UNIQUE INDEX uq_method_parameter_scope
+    ON method_parameter (method_run_id, parameter_term, ifnull(applies_to_entity_id, ''));
+CREATE UNIQUE INDEX uq_condition_value_scope
+    ON condition_value (condition_set_id, condition_term_id, ifnull(applies_to_entity_id, ''));
+
+COMMIT;

@@ -1,0 +1,127 @@
+{
+  "schema_version": "0.2.0",
+  "observation_id": "OBS-example-water-air-001",
+  "property_id": "surface_tension_equilibrium",
+  "context": {
+    "context_id": "CTX-example-water-air",
+    "type": "liquid_gas_interface",
+    "participants": [
+      {
+        "participant_id": "water-phase",
+        "role": "liquid_phase",
+        "entity": {
+          "entity_id": "PHASE-example-water",
+          "entity_type": "phase_sample",
+          "name": "water phase"
+        },
+        "phase_state": "liquid",
+        "composition": {
+          "stage": "equilibrated",
+          "completeness": "complete",
+          "components": [
+            {
+              "material_id": "MAT-water",
+              "material_kind": "substance",
+              "name": "water",
+              "amount_original": 1.0,
+              "unit_original": "1",
+              "basis": "mole_fraction",
+              "amount_canonical": 1.0,
+              "unit_canonical": "1",
+              "conversion_rule": "identity",
+              "active_product_basis": "not_applicable"
+            }
+          ]
+        }
+      },
+      {
+        "participant_id": "air-phase",
+        "role": "gas_phase",
+        "entity": {
+          "entity_id": "PHASE-example-air",
+          "entity_type": "phase_sample",
+          "name": "air phase"
+        },
+        "phase_state": "gas",
+        "composition": {
+          "stage": "reported_unspecified",
+          "completeness": "complete",
+          "components": [
+            {
+              "material_id": "MAT-air",
+              "material_kind": "mixture",
+              "name": "air",
+              "amount_original": 1.0,
+              "unit_original": "1",
+              "basis": "mole_fraction",
+              "amount_canonical": 1.0,
+              "unit_canonical": "1",
+              "conversion_rule": "identity",
+              "active_product_basis": "not_applicable"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "result": {
+    "value_status": "reported",
+    "raw_value_text": "72.0 mN/m",
+    "value_kind": "point",
+    "qualifier": "exact",
+    "value_original": 72.0,
+    "unit_original": "mN/m",
+    "value_canonical": 0.072,
+    "unit_canonical": "N/m",
+    "conversion_rule": "x / 1000",
+    "conversion_version": "units-v0.1",
+    "statistic_kind": "mean"
+  },
+  "source_assertion": {
+    "source_id": "SRC0006",
+    "doi": null,
+    "url": "https://iapws.org/technical-guidance/release/Surf-H2O",
+    "ingestion_route": "database_import",
+    "exact_locator": "illustrative value only; replace with exact release equation/point",
+    "reported_property_label": "surface tension",
+    "extraction_mode": "human",
+    "verification_status": "machine_extracted",
+    "accessed_on": "2026-09-05",
+    "redistribution_status": "metadata_only"
+  },
+  "method_run": {
+    "method_run_id": "RUN-example-method-001",
+    "origin_kind": "correlation",
+    "method_term": "illustrative reference correlation",
+    "run_label": "Illustrative water-air reference-correlation run",
+    "parameters": []
+  },
+  "conditions": [
+    {
+      "condition_id": "COND-example-temperature",
+      "kind": "temperature",
+      "status": "reported",
+      "raw_value_text": "25 °C",
+      "value_original": 25.0,
+      "unit_original": "°C",
+      "value_canonical": 298.15,
+      "unit_canonical": "K",
+      "conversion_rule": "x + 273.15",
+      "conversion_version": "units-v0.1"
+    }
+  ],
+  "uncertainties": [
+    {
+      "component_type": "source_reported",
+      "status": "not_reported",
+      "missing_reason": "illustrative schema example"
+    }
+  ],
+  "relations": [],
+  "quality": {
+    "data_level": "staging",
+    "review_status": "machine_extracted",
+    "flags": ["missing_uncertainty", "quarantine"]
+  },
+  "notes": "This is a structural example, not a curated scientific observation."
+}

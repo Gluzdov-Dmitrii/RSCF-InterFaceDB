@@ -1,0 +1,1232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Gluzdov-Dmitrii/RSCF-InterFaceDB/schemas/observation.schema.json",
+  "title": "InterFaceDB observation v0.2",
+  "description": "One source-reported, computed or predicted result in an explicit physical context.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "observation_id",
+    "property_id",
+    "context",
+    "result",
+    "source_assertion",
+    "method_run",
+    "conditions",
+    "uncertainties",
+    "relations",
+    "quality"
+  ],
+  "properties": {
+    "schema_version": { "const": "0.2.0" },
+    "observation_id": { "type": "string", "pattern": "^OBS-[A-Za-z0-9._-]+$" },
+    "property_id": { "$ref": "#/$defs/propertyId" },
+    "context": { "$ref": "#/$defs/context" },
+    "result": { "$ref": "#/$defs/result" },
+    "source_assertion": { "$ref": "#/$defs/sourceAssertion" },
+    "method_run": { "$ref": "#/$defs/methodRun" },
+    "conditions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/condition" }
+    },
+    "series": { "$ref": "#/$defs/series" },
+    "uncertainties": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/uncertainty" }
+    },
+    "relations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/relation" }
+    },
+    "quality": { "$ref": "#/$defs/quality" },
+    "notes": { "type": "string" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "property_id": {
+            "enum": ["surface_tension_equilibrium", "surface_tension_dynamic"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "context": { "properties": { "type": { "const": "liquid_gas_interface" } } }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "property_id": {
+            "enum": ["interfacial_tension_equilibrium", "interfacial_tension_dynamic"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "context": {
+            "properties": { "type": { "const": "liquid_liquid_interface" } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "property_id": {
+            "enum": [
+              "contact_angle_static",
+              "contact_angle_advancing",
+              "contact_angle_receding"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "context": { "properties": { "type": { "const": "three_phase_contact" } } }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "property_id": { "const": "adsorption_amount_static" }
+        }
+      },
+      "then": {
+        "properties": {
+          "context": { "properties": { "type": { "const": "liquid_solid_interface" } } }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "property_id": { "const": "adsorption_retention_dynamic" }
+        }
+      },
+      "then": {
+        "properties": {
+          "context": { "properties": { "type": { "const": "porous_media_flow" } } }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "property_id": {
+            "enum": [
+              "surface_tension_dynamic",
+              "interfacial_tension_dynamic"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": ["series"],
+        "properties": {
+          "series": {
+            "properties": {
+              "coordinates": {
+                "contains": {
+                  "properties": { "kind": { "const": "surface_age" } },
+                  "required": ["kind", "time_origin"]
+                },
+                "minContains": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "property_id": { "const": "apparent_viscosity" } } },
+      "then": {
+        "required": ["series"],
+        "properties": {
+          "series": {
+            "properties": {
+              "coordinates": {
+                "contains": {
+                  "properties": { "kind": { "const": "shear_rate" } },
+                  "required": ["kind"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "propertyId": {
+      "enum": [
+        "surface_tension_equilibrium",
+        "surface_tension_dynamic",
+        "interfacial_tension_equilibrium",
+        "interfacial_tension_dynamic",
+        "contact_angle_static",
+        "contact_angle_advancing",
+        "contact_angle_receding",
+        "adsorption_amount_static",
+        "adsorption_retention_dynamic",
+        "interfacial_layer_thickness",
+        "dispersion_stability_index",
+        "zeta_potential",
+        "aggregate_size_apparent",
+        "apparent_viscosity",
+        "plastic_viscosity",
+        "yield_point",
+        "gel_strength",
+        "hpht_filtrate_volume",
+        "filter_cake_thickness",
+        "lubricity_coefficient",
+        "permeability_impairment",
+        "recovery_factor",
+        "bet_surface_area",
+        "raman_id_ig",
+        "cnt_outer_diameter",
+        "cnt_length",
+        "porous_media_retained_mass_dynamic",
+        "sedimentation_supernatant_mass_fraction",
+        "centrifugation_supernatant_mass_fraction",
+        "dls_hydrodynamic_diameter_z_average",
+        "image_aggregate_equivalent_diameter",
+        "interfacial_coverage_fraction",
+        "emulsion_droplet_diameter_d32",
+        "emulsion_separated_volume_fraction",
+        "oscillatory_storage_modulus",
+        "oscillatory_loss_modulus",
+        "yield_stress_herschel_bulkley",
+        "oilfield_yield_point_api",
+        "cnt_purity_mass_fraction",
+        "cnt_ash_mass_fraction",
+        "cnt_surface_oxygen_atomic_fraction",
+        "cnt_functional_group_amount",
+        "cnt_aspect_ratio"
+      ]
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity_id", "entity_type", "name"],
+      "properties": {
+        "entity_id": { "type": "string", "minLength": 1 },
+        "entity_type": {
+          "enum": [
+            "material",
+            "material_lot",
+            "nanomaterial_lot",
+            "formulation",
+            "phase_sample",
+            "surface_specimen",
+            "dispersion_batch",
+            "core_sample",
+            "application_run"
+          ]
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "inchi_key": { "type": ["string", "null"] },
+        "smiles": { "type": ["string", "null"] },
+        "cas_rn": { "type": ["string", "null"] },
+        "supplier": { "type": ["string", "null"] },
+        "product": { "type": ["string", "null"] },
+        "batch": { "type": ["string", "null"] },
+        "purity_raw": { "type": ["string", "null"] },
+        "functionalization": { "type": ["string", "null"] },
+        "product_form": { "type": ["string", "null"] }
+      }
+    },
+    "compositionComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "material_id",
+        "material_kind",
+        "name",
+        "amount_original",
+        "unit_original",
+        "basis"
+      ],
+      "properties": {
+        "material_id": { "type": "string", "minLength": 1 },
+        "material_lot_id": { "type": ["string", "null"] },
+        "material_kind": {
+          "enum": ["substance", "mixture", "polymer", "surfactant_product", "nanomaterial_lot"]
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "amount_original": { "type": "number", "minimum": 0 },
+        "unit_original": { "type": "string", "minLength": 1 },
+        "basis": {
+          "enum": [
+            "mole_fraction",
+            "mass_fraction",
+            "volume_fraction",
+            "molality",
+            "amount_concentration",
+            "mass_concentration",
+            "parts_per_mass",
+            "parts_per_volume",
+            "mass_per_oilfield_barrel",
+            "reported_other"
+          ]
+        },
+        "amount_canonical": { "type": ["number", "null"], "minimum": 0 },
+        "unit_canonical": { "type": ["string", "null"] },
+        "conversion_rule": { "type": ["string", "null"] },
+        "active_product_basis": {
+          "enum": ["dry_active", "commercial_product", "total_formulation", "not_applicable", "unknown"]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "material_kind": { "const": "nanomaterial_lot" } } },
+          "then": { "required": ["material_lot_id", "active_product_basis"] }
+        }
+      ]
+    },
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "completeness", "components"],
+      "properties": {
+        "stage": {
+          "enum": ["nominal", "measured_precontact", "equilibrated", "reported_unspecified"]
+        },
+        "completeness": { "enum": ["complete", "incomplete", "unknown"] },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/compositionComponent" }
+        }
+      }
+    },
+    "surfaceSpecimen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["material", "preparation_status"],
+      "properties": {
+        "material": { "type": "string", "minLength": 1 },
+        "crystal_face_or_termination": { "type": ["string", "null"] },
+        "hydroxylation": { "type": ["string", "null"] },
+        "preparation_status": { "enum": ["reported", "partial", "not_reported"] },
+        "preparation": { "type": ["string", "null"] },
+        "aging_or_coating_history": { "type": ["string", "null"] },
+        "roughness_observation_id": { "type": ["string", "null"] }
+      }
+    },
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["participant_id", "role", "entity"],
+      "properties": {
+        "participant_id": { "type": "string", "minLength": 1 },
+        "role": {
+          "enum": [
+            "liquid_phase",
+            "liquid_phase_a",
+            "liquid_phase_b",
+            "gas_phase",
+            "probe_phase",
+            "ambient_phase",
+            "solid_surface",
+            "bulk_fluid",
+            "subject_nanomaterial_lot",
+            "dispersion",
+            "application_run",
+            "porous_medium",
+            "formulation"
+          ]
+        },
+        "entity": { "$ref": "#/$defs/entity" },
+        "phase_state": { "enum": ["liquid", "gas", "solid", "multiphase", "unknown"] },
+        "composition": { "$ref": "#/$defs/composition" },
+        "surface_specimen": { "$ref": "#/$defs/surfaceSpecimen" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "enum": ["liquid_phase", "liquid_phase_a", "liquid_phase_b"]
+              }
+            }
+          },
+          "then": { "properties": { "phase_state": { "const": "liquid" } } }
+        },
+        {
+          "if": { "properties": { "role": { "const": "gas_phase" } } },
+          "then": { "properties": { "phase_state": { "const": "gas" } } }
+        },
+        {
+          "if": {
+            "properties": { "role": { "enum": ["probe_phase", "ambient_phase"] } }
+          },
+          "then": { "properties": { "phase_state": { "enum": ["liquid", "gas"] } } }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "enum": [
+                  "liquid_phase",
+                  "liquid_phase_a",
+                  "liquid_phase_b",
+                  "gas_phase",
+                  "probe_phase",
+                  "ambient_phase"
+                ]
+              }
+            }
+          },
+          "then": { "required": ["phase_state", "composition"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": { "const": "solid_surface" }
+            }
+          },
+          "then": { "required": ["surface_specimen"] }
+        }
+      ]
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["context_id", "type", "participants"],
+      "properties": {
+        "context_id": { "type": "string", "minLength": 1 },
+        "type": {
+          "enum": [
+            "liquid_gas_interface",
+            "liquid_liquid_interface",
+            "three_phase_contact",
+            "liquid_solid_interface",
+            "bulk_fluid",
+            "dispersion",
+            "nanomaterial_lot",
+            "filtration_test",
+            "lubricity_test",
+            "porous_media_flow"
+          ]
+        },
+        "participants": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/participant" }
+        },
+        "measured_through_participant_id": { "type": "string" },
+        "geometry": {
+          "enum": ["sessile_drop", "captive_bubble", "tilting_plate", "meniscus", "other"]
+        },
+        "geometry_description": { "type": ["string", "null"] }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "geometry": { "const": "other" } },
+            "required": ["geometry"]
+          },
+          "then": {
+            "required": ["geometry_description"],
+            "properties": { "geometry_description": { "type": "string", "minLength": 1 } }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "liquid_gas_interface" } } },
+          "then": {
+            "properties": {
+              "participants": {
+                "minItems": 2,
+                "maxItems": 2,
+                "contains": {
+                  "properties": { "role": { "const": "liquid_phase" } },
+                  "required": ["role"]
+                },
+                "minContains": 1,
+                "maxContains": 1
+              }
+            },
+            "allOf": [
+              {
+                "properties": {
+                  "participants": {
+                    "contains": {
+                      "properties": { "role": { "const": "gas_phase" } },
+                      "required": ["role"]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "liquid_liquid_interface" } } },
+          "then": {
+            "properties": { "participants": { "minItems": 2, "maxItems": 2 } },
+            "allOf": [
+              {
+                "properties": {
+                  "participants": {
+                    "contains": {
+                      "properties": { "role": { "const": "liquid_phase_a" } },
+                      "required": ["role"]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "participants": {
+                    "contains": {
+                      "properties": { "role": { "const": "liquid_phase_b" } },
+                      "required": ["role"]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "three_phase_contact" } } },
+          "then": {
+            "required": ["measured_through_participant_id", "geometry"],
+            "properties": { "participants": { "minItems": 3 } },
+            "allOf": [
+              {
+                "properties": {
+                  "participants": {
+                    "contains": {
+                      "properties": { "role": { "const": "probe_phase" } },
+                      "required": ["role"]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "participants": {
+                    "contains": {
+                      "properties": { "role": { "const": "ambient_phase" } },
+                      "required": ["role"]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "participants": {
+                    "contains": {
+                      "properties": { "role": { "const": "solid_surface" } },
+                      "required": ["role"]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "liquid_solid_interface" } } },
+          "then": {
+            "properties": { "participants": { "minItems": 2, "maxItems": 2 } },
+            "allOf": [
+              {
+                "properties": {
+                  "participants": {
+                    "contains": {
+                      "properties": { "role": { "const": "liquid_phase" } },
+                      "required": ["role"]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "participants": {
+                    "contains": {
+                      "properties": { "role": { "const": "solid_surface" } },
+                      "required": ["role"]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "bulk_fluid" } } },
+          "then": {
+            "properties": {
+              "participants": {
+                "contains": {
+                  "properties": { "role": { "const": "bulk_fluid" } },
+                  "required": ["role"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "nanomaterial_lot" } } },
+          "then": {
+            "properties": {
+              "participants": {
+                "contains": {
+                  "properties": { "role": { "const": "subject_nanomaterial_lot" } },
+                  "required": ["role"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "dispersion" } } },
+          "then": {
+            "properties": {
+              "participants": {
+                "contains": {
+                  "properties": { "role": { "const": "dispersion" } },
+                  "required": ["role"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "enum": ["filtration_test", "lubricity_test"] }
+            }
+          },
+          "then": {
+            "properties": {
+              "participants": {
+                "contains": {
+                  "properties": { "role": { "const": "application_run" } },
+                  "required": ["role"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "porous_media_flow" } } },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "participants": {
+                    "contains": {
+                      "properties": { "role": { "const": "application_run" } },
+                      "required": ["role"]
+                    }
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "participants": {
+                    "contains": {
+                      "properties": { "role": { "const": "porous_medium" } },
+                      "required": ["role"]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value_status"],
+      "properties": {
+        "value_status": { "const": "reported" },
+        "raw_value_text": { "type": "string", "minLength": 1 },
+        "value_kind": { "enum": ["point", "interval", "censored"] },
+        "qualifier": {
+          "enum": [
+            "exact",
+            "approximate",
+            "less_than",
+            "less_or_equal",
+            "greater_than",
+            "greater_or_equal"
+          ]
+        },
+        "value_original": { "type": "number" },
+        "lower_original": { "type": "number" },
+        "upper_original": { "type": "number" },
+        "unit_original": { "type": "string", "minLength": 1 },
+        "value_canonical": { "type": "number" },
+        "lower_canonical": { "type": "number" },
+        "upper_canonical": { "type": "number" },
+        "unit_canonical": { "type": "string", "minLength": 1 },
+        "conversion_rule": { "type": "string", "minLength": 1 },
+        "conversion_version": { "type": "string", "minLength": 1 },
+        "measurand_entity_id": { "type": ["string", "null"] },
+        "result_basis": {
+          "enum": [
+            "dry_sorbent_mass",
+            "dry_core_mass",
+            "initial_permeability",
+            "ooip",
+            "roip",
+            "initial_fluid_in_place",
+            "initial_dispersed_component_mass",
+            "analyzed_interfacial_area",
+            "initial_sample_volume",
+            "as_received_sample_mass",
+            "dry_sample_mass",
+            "total_detected_atoms",
+            "dry_nanotube_mass",
+            "method_defined"
+          ]
+        },
+        "result_basis_description": { "type": ["string", "null"] },
+        "statistic_kind": {
+          "enum": [
+            "single_value",
+            "mean",
+            "median",
+            "mode",
+            "fitted_value",
+            "simulation_average",
+            "digitized_estimate",
+            "model_prediction"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "value_status": { "const": "reported" } } },
+          "then": {
+            "required": [
+              "raw_value_text",
+              "value_kind",
+              "unit_original",
+              "unit_canonical",
+              "conversion_rule",
+              "conversion_version",
+              "statistic_kind"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "value_status": { "const": "reported" },
+              "value_kind": { "const": "point" }
+            },
+            "required": ["value_kind"]
+          },
+          "then": { "required": ["value_original", "value_canonical", "qualifier"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "value_status": { "const": "reported" },
+              "value_kind": { "const": "interval" }
+            },
+            "required": ["value_kind"]
+          },
+          "then": {
+            "required": [
+              "lower_original",
+              "upper_original",
+              "lower_canonical",
+              "upper_canonical"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "value_status": { "const": "reported" },
+              "value_kind": { "const": "censored" }
+            },
+            "required": ["value_kind"]
+          },
+          "then": {
+            "required": ["value_original", "value_canonical", "qualifier"],
+            "properties": {
+              "qualifier": {
+                "enum": ["less_than", "less_or_equal", "greater_than", "greater_or_equal"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "sourceAssertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "ingestion_route",
+        "exact_locator",
+        "reported_property_label",
+        "extraction_mode",
+        "verification_status",
+        "redistribution_status"
+      ],
+      "properties": {
+        "source_id": { "type": "string", "pattern": "^SRC[0-9]{4,}$" },
+        "doi": { "type": ["string", "null"], "pattern": "^10\\.[0-9]{4,9}/.+$" },
+        "url": { "type": ["string", "null"], "format": "uri" },
+        "ingestion_route": {
+          "enum": ["primary_publication", "database_import", "secondary_source", "internal_run"]
+        },
+        "exact_locator": { "type": "string", "minLength": 1 },
+        "reported_property_label": { "type": "string", "minLength": 1 },
+        "extraction_mode": {
+          "enum": ["human", "machine", "digitized_figure", "programmatic_import"]
+        },
+        "verification_status": {
+          "enum": ["machine_extracted", "human_checked", "human_verified", "adjudicated"]
+        },
+        "accessed_on": { "type": ["string", "null"], "format": "date" },
+        "redistribution_status": {
+          "enum": ["allowed", "metadata_only", "restricted", "unknown"]
+        }
+      }
+    },
+    "methodParameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parameter_term", "value_original_text"],
+      "properties": {
+        "parameter_term": {
+          "enum": [
+            "population_statistic",
+            "raman_excitation_wavelength",
+            "spectral_fitting_convention",
+            "rheological_model",
+            "stability_fraction_definition",
+            "size_analysis_protocol",
+            "coverage_segmentation_protocol",
+            "emulsion_droplet_analysis_protocol",
+            "purity_assay",
+            "ash_assay",
+            "functionalization_assay",
+            "standard_or_protocol",
+            "reported_other"
+          ]
+        },
+        "value_term": { "type": ["string", "null"] },
+        "value_original_text": { "type": "string", "minLength": 1 },
+        "value_original": { "type": ["number", "null"] },
+        "unit_original": { "type": ["string", "null"] },
+        "value_canonical": { "type": ["number", "null"] },
+        "unit_canonical": { "type": ["string", "null"] },
+        "applies_to_entity_id": { "type": ["string", "null"] }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "parameter_term": { "const": "population_statistic" } }
+          },
+          "then": {
+            "required": ["value_term"],
+            "properties": {
+              "value_term": {
+                "enum": [
+                  "arithmetic_mean",
+                  "median",
+                  "mode",
+                  "percentile",
+                  "mean_of_individual_ratios",
+                  "ratio_of_population_means"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "parameter_term": { "const": "rheological_model" } } },
+          "then": {
+            "required": ["value_term"],
+            "properties": {
+              "value_term": {
+                "enum": [
+                  "bingham_plastic",
+                  "herschel_bulkley",
+                  "casson",
+                  "api_dial_calculation",
+                  "other_named_model"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "methodRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method_run_id", "origin_kind", "method_term", "run_label", "parameters"],
+      "properties": {
+        "method_run_id": { "type": "string", "minLength": 1 },
+        "origin_kind": {
+          "enum": [
+            "experiment",
+            "molecular_dynamics",
+            "dft_qm",
+            "cfd_lbm",
+            "correlation",
+            "ml_prediction",
+            "derived"
+          ]
+        },
+        "method_term": { "type": "string", "minLength": 1 },
+        "run_label": { "type": "string", "minLength": 1 },
+        "protocol_identifier": { "type": ["string", "null"] },
+        "instrument_name": { "type": ["string", "null"] },
+        "instrument_model": { "type": ["string", "null"] },
+        "software_name": { "type": ["string", "null"] },
+        "software_version": { "type": ["string", "null"] },
+        "protocol_version": { "type": ["string", "null"] },
+        "force_field_or_model": { "type": ["string", "null"] },
+        "replicate_count": { "type": ["integer", "null"], "minimum": 1 },
+        "model_run_id": { "type": ["string", "null"] },
+        "parameters": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/methodParameter" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "origin_kind": { "const": "ml_prediction" } } },
+          "then": {
+            "required": ["model_run_id"],
+            "properties": { "model_run_id": { "type": "string", "minLength": 1 } }
+          }
+        }
+      ]
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["condition_id", "kind", "status"],
+      "properties": {
+        "condition_id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": [
+            "temperature",
+            "pressure_absolute",
+            "pH",
+            "ionic_strength",
+            "salinity_mass_fraction",
+            "surface_age",
+            "relative_humidity",
+            "equilibration_time",
+            "sample_age",
+            "storage_time",
+            "relative_centrifugal_force",
+            "centrifugation_time",
+            "rest_time",
+            "filtration_time",
+            "confining_pressure",
+            "shear_rate",
+            "frequency",
+            "strain",
+            "flow_rate",
+            "superficial_velocity",
+            "interstitial_velocity",
+            "pore_volume_injected",
+            "component_concentration"
+          ]
+        },
+        "status": { "enum": ["reported", "derived", "not_reported", "not_applicable"] },
+        "raw_value_text": { "type": "string" },
+        "value_original": { "type": "number" },
+        "unit_original": { "type": "string" },
+        "value_canonical": { "type": "number" },
+        "unit_canonical": { "type": "string" },
+        "conversion_rule": { "type": "string" },
+        "conversion_version": { "type": ["string", "null"] },
+        "missing_reason": { "type": "string" },
+        "target_participant_id": { "type": ["string", "null"] },
+        "target_material_id": { "type": ["string", "null"] },
+        "composition_basis": {
+          "enum": ["mole_fraction", "mass_fraction", "volume_fraction", "molality", "amount_concentration", "mass_concentration", "parts_per_mass", "parts_per_volume", "mass_per_oilfield_barrel", "reported_other"]
+        },
+        "pressure_reference": { "enum": ["absolute", "gauge", "unspecified"] },
+        "ph_scale_or_method": { "type": ["string", "null"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "reported" } } },
+          "then": {
+            "required": [
+              "raw_value_text",
+              "value_original",
+              "unit_original",
+              "value_canonical",
+              "unit_canonical",
+              "conversion_rule",
+              "conversion_version"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "enum": ["not_reported", "not_applicable"] } }
+          },
+          "then": { "required": ["missing_reason"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": { "enum": ["pressure_absolute", "confining_pressure"] }
+            }
+          },
+          "then": { "required": ["pressure_reference"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "component_concentration" } } },
+          "then": {
+            "required": ["target_participant_id", "target_material_id", "composition_basis"]
+          }
+        }
+      ]
+    },
+    "coordinate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinate_id",
+        "kind",
+        "raw_value_text",
+        "value_original",
+        "unit_original",
+        "value_canonical",
+        "unit_canonical",
+        "conversion_rule"
+      ],
+      "properties": {
+        "coordinate_id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": [
+            "surface_age",
+            "equilibration_time",
+            "sample_age",
+            "storage_time",
+            "relative_centrifugal_force",
+            "centrifugation_time",
+            "rest_time",
+            "filtration_time",
+            "component_concentration",
+            "temperature",
+            "pressure_absolute",
+            "confining_pressure",
+            "shear_rate",
+            "frequency",
+            "strain",
+            "flow_rate",
+            "superficial_velocity",
+            "interstitial_velocity",
+            "pore_volume_injected"
+          ]
+        },
+        "raw_value_text": { "type": "string", "minLength": 1 },
+        "value_original": { "type": "number", "minimum": 0 },
+        "unit_original": { "type": "string", "minLength": 1 },
+        "value_canonical": { "type": "number", "minimum": 0 },
+        "unit_canonical": { "type": "string", "minLength": 1 },
+        "conversion_rule": { "type": "string", "minLength": 1 },
+        "conversion_version": { "type": "string", "minLength": 1 },
+        "time_origin": { "type": "string", "minLength": 1 },
+        "target_participant_id": { "type": ["string", "null"] },
+        "target_material_id": { "type": ["string", "null"] },
+        "composition_basis": {
+          "enum": ["mole_fraction", "mass_fraction", "volume_fraction", "molality", "amount_concentration", "mass_concentration", "parts_per_mass", "parts_per_volume", "mass_per_oilfield_barrel", "reported_other"]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "component_concentration" } } },
+          "then": {
+            "required": ["target_participant_id", "target_material_id", "composition_basis"]
+          }
+        }
+      ]
+    },
+    "series": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["series_id", "coordinates"],
+      "properties": {
+        "series_id": { "type": "string", "minLength": 1 },
+        "replicate_group_id": { "type": ["string", "null"] },
+        "point_index": { "type": ["integer", "null"], "minimum": 0 },
+        "coordinates": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/coordinate" }
+        }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component_type", "status"],
+      "properties": {
+        "component_type": {
+          "enum": [
+            "source_reported",
+            "measurement",
+            "repeatability",
+            "digitization",
+            "simulation_sampling",
+            "model_predictive"
+          ]
+        },
+        "status": { "enum": ["reported", "derived", "not_reported"] },
+        "representation": {
+          "enum": ["standard_uncertainty", "expanded_uncertainty", "confidence_interval", "range"]
+        },
+        "value": { "type": "number", "minimum": 0 },
+        "lower": { "type": "number" },
+        "upper": { "type": "number" },
+        "unit": { "type": "string", "minLength": 1 },
+        "confidence_level": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "coverage_factor": { "type": "number", "exclusiveMinimum": 0 },
+        "derivation": { "type": ["string", "null"] },
+        "missing_reason": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "enum": ["reported", "derived"] } } },
+          "then": { "required": ["representation", "unit"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": { "enum": ["reported", "derived"] },
+              "representation": { "const": "standard_uncertainty" }
+            },
+            "required": ["representation"]
+          },
+          "then": { "required": ["value"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": { "enum": ["reported", "derived"] },
+              "representation": { "const": "expanded_uncertainty" }
+            },
+            "required": ["representation"]
+          },
+          "then": { "required": ["value", "coverage_factor"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": { "enum": ["reported", "derived"] },
+              "representation": { "const": "confidence_interval" }
+            },
+            "required": ["representation"]
+          },
+          "then": { "required": ["lower", "upper", "confidence_level"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": { "enum": ["reported", "derived"] },
+              "representation": { "const": "range" }
+            },
+            "required": ["representation"]
+          },
+          "then": { "required": ["lower", "upper"] }
+        },
+        {
+          "if": { "properties": { "status": { "const": "not_reported" } } },
+          "then": {
+            "required": ["missing_reason"],
+            "not": {
+              "anyOf": [
+                { "required": ["value"] },
+                { "required": ["lower"] },
+                { "required": ["upper"] }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relation_type", "observation_id"],
+      "properties": {
+        "relation_type": {
+          "enum": ["replicate_of", "derived_from", "control_for", "conflicts_with", "supersedes"]
+        },
+        "observation_id": { "type": "string", "pattern": "^OBS-[A-Za-z0-9._-]+$" }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["data_level", "review_status", "flags"],
+      "properties": {
+        "data_level": { "enum": ["staging", "curated", "model_ready"] },
+        "review_status": {
+          "enum": ["machine_extracted", "single_review", "double_review", "adjudicated"]
+        },
+        "flags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "missing_uncertainty",
+              "missing_temperature",
+              "ambiguous_context",
+              "ambiguous_unit",
+              "ambiguous_concentration_basis",
+              "estimated_from_figure",
+              "secondary_source",
+              "possible_duplicate",
+              "composition_incomplete",
+              "surface_history_incomplete",
+              "method_incomplete",
+              "outside_reported_range",
+              "rights_unresolved",
+              "quarantine"
+            ]
+          }
+        },
+        "reviewer": { "type": ["string", "null"] },
+        "reviewed_on": { "type": ["string", "null"], "format": "date" }
+      }
+    }
+  }
+}

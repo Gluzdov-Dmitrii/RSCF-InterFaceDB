@@ -1,0 +1,15 @@
+---
+description: Enforces evidence-backed scientific work and prevents fabricated claims
+alwaysApply: true
+---
+
+# Research integrity
+
+- Never invent citations, DOIs, values, sample sizes, methods or source locators.
+- Mark each statement as source fact, computed result, inference or hypothesis when ambiguity is possible.
+- Verify DOI and URL resolution before accepting a source.
+- Keep contradictory evidence and explain the conflict; do not average it away without a method.
+- A machine extraction is provisional until human verification.
+- Report limitations and missing metadata directly.
+- Do not claim novelty, Q1/Q2 status or state of the art without a dated search.
+- Do not redistribute restricted full text or partner material.

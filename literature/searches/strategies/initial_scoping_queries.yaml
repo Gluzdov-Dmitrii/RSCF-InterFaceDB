@@ -1,0 +1,106 @@
+strategy_id: scoping_v0_1
+created: 2026-09-05
+review_period: no_lower_year_limit
+languages:
+  - en
+  - ru
+deduplicate_by:
+  - normalized_doi
+  - normalized_title_year
+
+streams:
+  - id: S1_surface_tension
+    question: Equilibrium liquid-vapor surface tension data and prediction for pure liquids and mixtures
+    queries:
+      - '"surface tension" AND (database OR dataset OR ThermoML) AND (liquid OR mixture)'
+      - '"surface tension" AND (QSPR OR "machine learning" OR PC-SAFT OR "density gradient theory" OR COSMO-RS)'
+    seed_sources:
+      - https://www.nist.gov/mml/acmd/trc/thermoml
+      - https://webbook.nist.gov/chemistry/fluid/
+      - https://iapws.org/technical-guidance/release/Surf-H2O
+
+  - id: S2_liquid_liquid_ift
+    question: Equilibrium and dynamic liquid-liquid IFT with complete phase and composition context
+    queries:
+      - '("interfacial tension" OR IFT) AND (oil OR hydrocarbon) AND (brine OR water) AND (dataset OR experiment OR model)'
+      - '"interfacial tension" AND mixture AND (ThermoML OR database OR molecular dynamics)'
+    seed_dois:
+      - 10.1021/acsami.9b22189
+
+  - id: S3_dynamic_tension
+    question: Dynamic surface/interfacial tension of surfactants with surface age and method
+    queries:
+      - '"dynamic surface tension" AND surfactant AND (database OR dataset OR measurement)'
+      - '"maximum bubble pressure" AND surfactant AND temperature AND concentration'
+    seed_sources:
+      - https://zenodo.org/records/21118257
+
+  - id: S4_mineral_wettability
+    question: Contact angle, wettability alteration and adsorption on mineral surfaces
+    queries:
+      - '(wettability OR "contact angle") AND (calcite OR quartz OR dolomite OR mica OR shale) AND (brine OR oil OR surfactant)'
+      - '(adsorption OR desorption) AND surfactant AND mineral AND (isotherm OR molecular dynamics)'
+    exclusions:
+      - biomedical surfaces without transferable methods
+
+  - id: S5_ml_and_uncertainty
+    question: Prediction design, uncertainty, leakage and out-of-domain validation
+    queries:
+      - '("surface tension" OR "interfacial tension") AND (QSPR OR ML OR GNN) AND (uncertainty OR "applicability domain" OR extrapolation)'
+      - '("surface tension" OR "interfacial tension") AND ("leave one" OR "external validation" OR "temporal split" OR "scaffold split")'
+    extraction_focus:
+      - dataset identity and size
+      - grouping and split strategy
+      - duplicate leakage controls
+      - uncertainty method
+      - external test composition
+
+  - id: S6_computation
+    question: Reproducible physical, MD, QM and continuum pipelines
+    queries:
+      - '"surface tension" AND (PC-SAFT OR DGT OR "classical density functional theory" OR COSMO-RS)'
+      - '("interfacial tension" OR wettability OR "contact angle") AND "molecular dynamics" AND (validation OR convergence OR "finite size")'
+      - '(wettability OR "contact angle") AND (CFD OR "lattice Boltzmann" OR "pore network") AND uncertainty'
+    extraction_focus:
+      - software and version
+      - force field or electronic-structure level
+      - system size and equilibration
+      - estimator and uncertainty
+      - experimental validation
+
+  - id: S7_mwcnt_drilling
+    question: Mechanistic and application evidence for MWCNT in drilling and oilfield fluids
+    queries:
+      - '(MWCNT OR "multi-walled carbon nanotube") AND ("drilling fluid" OR "drilling mud") AND (rheology OR filtration OR lubricity OR stability)'
+      - '(MWCNT OR CNT) AND (Pickering OR "oil-water interface" OR dispersion) AND (wettability OR surfactant OR salinity)'
+      - '(MWCNT OR CNT) AND (formation damage OR plugging OR permeability OR "core flooding")'
+    seed_dois:
+      - 10.1016/j.petrol.2016.01.036
+      - 10.1016/j.molliq.2024.125448
+      - 10.1021/acs.langmuir.5b03189
+      - 10.1016/j.colsurfa.2017.10.010
+    extraction_focus:
+      - CNT grade, dimensions, purity, BET and functionalization
+      - concentration and unit basis
+      - dispersant, polymer, brine and base formulation
+      - mixing order, energy, time and aging
+      - dynamic and equilibrium interfacial metrics
+      - rheology, filtration, lubricity, cake, invasion and damage
+      - matched controls and statistics
+
+platforms:
+  open:
+    - Crossref
+    - OpenAlex
+    - PubMed where relevant
+    - Lens or Google Patents for patents
+  institutional_if_available:
+    - Scopus
+    - Web of Science Core Collection
+  direct_data_sources:
+    - NIST ThermoML
+    - NIST ILThermo
+    - NIST Chemistry WebBook
+    - NOAA ADIOS
+    - IAPWS
+    - Zenodo

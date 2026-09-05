@@ -1,0 +1,20 @@
+---
+description: Defines observation semantics, units and provenance for research data
+globs: "{data,database,literature,src}/**/*"
+alwaysApply: false
+---
+
+# Data and provenance
+
+- One observation is one result for one context, composition, condition and method run.
+- Use liquid-gas, liquid-liquid, three-phase-contact, adsorption, bulk, dispersion and porous-media contexts.
+- Distinguish equilibrium surface tension, equilibrium IFT and dynamic tension.
+- Preserve raw text, original value and unit; add canonical value, unit and versioned conversion separately.
+- For liquid-liquid IFT, record both phase compositions when available.
+- For contact angle, require droplet, ambient phase, surface, geometry and measured-through phase.
+- For dynamic data, require a series coordinate and time origin; zero surface age is valid.
+- Store temperature, pressure, pH, salinity basis, dissolved gas and equilibration state when reported.
+- Store method, instrument or software version, uncertainty, repeats and exact source locator.
+- Separate experiment/MD/QM/continuum/correlation/ML origin from publication/database ingestion route.
+- Every transformation records input hash, code or prompt version, agent and timestamp.
+- Do not overwrite raw inputs. Derived outputs go to a later data stage.

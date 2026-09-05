@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "interface-db"
+version = "0.1.0"
+description = "Reproducible retrieval, validation and modeling tools for liquid interfacial properties"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Dmitry Gluzdov" }]
+dependencies = [
+  "fonttools>=4.55",
+  "jsonschema>=4.23",
+  "pypdf>=5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.9",
+]
+ml = [
+  "pandas>=2.2",
+  "pyarrow>=18",
+  "scikit-learn>=1.6",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/interface_db"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
