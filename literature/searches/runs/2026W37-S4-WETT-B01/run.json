@@ -1,0 +1,19 @@
+{
+  "search_run_id": "2026W37-S4-WETT-B01",
+  "stream": "S4",
+  "platform": "OpenAlex",
+  "endpoint": "https://api.openalex.org/works",
+  "query": "search=(wettability OR \"contact angle\") AND (calcite OR quartz OR shale OR mineral) AND (brine OR oil) | filter=title_and_abstract.search:\"contact angle\" OR wettability",
+  "filters": {
+    "sort": "relevance_score:desc",
+    "per-page": 50
+  },
+  "url": "https://api.openalex.org/works?search=%28wettability+OR+%22contact+angle%22%29+AND+%28calcite+OR+quartz+OR+shale+OR+mineral%29+AND+%28brine+OR+oil%29&filter=title_and_abstract.search%3A%22contact+angle%22+OR+wettability&per-page=50&sort=relevance_score%3Adesc&mailto=literature%40interface-db.local",
+  "utc": "2026-09-05T10:31:07.832651+00:00",
+  "http_status": 200,
+  "total_results": 19846,
+  "exported": 50,
+  "operator": "machine_lab_assistant",
+  "strategy_id": "scoping_v0_1",
+  "note": "OpenAlex search+filter. Crossref Boolean totals are not used."
+}

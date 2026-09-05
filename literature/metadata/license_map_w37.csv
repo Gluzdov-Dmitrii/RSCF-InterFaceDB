@@ -1,0 +1,26 @@
+source_id,title,year,doi,license_or_terms,redistribution_status,priority,notes
+SRC0001,NIST ThermoML archive,,none_site,verify_terms,high,Machine-readable; map property codes before ingest
+SRC0002,NIST ILThermo,2007,none_site,verify_terms,high,Open web DB
+SRC0003,NIST Chemistry WebBook,,restricted_terms,restricted_terms,medium,ST along saturation only
+SRC0004,NOAA ADIOS,,open_data_verify_license,open_data_verify_license,high,Record completeness varies
+SRC0005,DST-SurfDB,2026,10.5281/zenodo.21118257,cc_by_4_0,allowed,high,979 series
+SRC0006,IAPWS water ST,2014,none_site,verify_terms,high,Water-vapor reference
+SRC0007,Kirch et al. ACS AMI,2020,10.1021/acsami.9b22189,unknown_acs,fulltext_restricted,high,MD+ML IFT analogue
+SRC0008,Fuel H2 wettability ML,2023,10.1016/j.fuel.2023.129354,cc_by_verify,unknown,medium,OA claimed in manifest
+SRC0009,Minerals MD wettability,2025,10.3390/min15111194,cc_by,allowed,high,MDPI
+SRC0015,Lysakova J Mol Liq,2024,10.1016/j.molliq.2024.125448,unknown_elsevier,fulltext_restricted,high,PDF not obtained 2026-09-05
+SRC0016,Ismail JPSE,2016,10.1016/j.petrol.2016.01.036,unknown_elsevier,fulltext_restricted,high,PDF not obtained
+SRC0017,Briggs Langmuir,2015,10.1021/acs.langmuir.5b03189,unknown_acs,fulltext_restricted,high,PDF not obtained
+SRC0018,Briggs ColSurA,2018,10.1016/j.colsurfa.2017.10.010,unknown_elsevier,restricted_accepted_ms_local,high,Local accepted-manuscript PDF via Sci-Hub
+B01-S19,Okoro JPEPT,2019,10.1007/s13202-019-0740-8,springer_oa_unpaywall,unknown_verify,high,Local PDF; ppb=lbm/bbl Table 2
+B01-S06,Fazelabdolabadi Appl Nanosci,2014,10.1007/s13204-014-0359-5,cc-by,allowed,high,Local OA PDF
+B01-S05,Lysakova Energies,2023,10.3390/en16196875,cc-by-4.0,allowed,high,MDPI 403 on PDF this session; HTML used
+SRC0021,FeOs,2023,10.1021/acs.iecr.2c04561,open_source_verify,open_source_verify,high,Code+paper
+SRC0023,DDB,,licensed,not_redistributable,medium,No institutional export this week
+SRC0024,DIPPR 801,,licensed,not_redistributable,medium,
+SRC0025,REFPROP,,licensed,not_redistributable,medium,
+SRC0026,ThermoML IUPAC paper,2006,10.1351/pac200678030541,public-domain_unpaywall,allowed,high,Local PDF W37-P001
+B01-S11,Aftab EJPE,2017,10.1016/j.ejpe.2016.05.004,cc-by-nc-nd,restricted,medium,Local PDF W37-P025
+B01-S10,Ismail IOP,2018,10.1088/1757-899X/380/1/012021,cc-by-3.0,allowed,medium,Local PDF
+W37-A007,Amott 1959,1959,10.2118/1167-g,unknown_spe,unknown,high,Foundational wettability test
+W37-A013,Kirch ACSAMI,2020,10.1021/acsami.9b22189,unknown_acs,restricted,high,Duplicate of SRC0007 row for screening id

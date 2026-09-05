@@ -1,0 +1,19 @@
+{
+  "search_run_id": "2026W37-S1-ST-B01",
+  "stream": "S1",
+  "platform": "OpenAlex",
+  "endpoint": "https://api.openalex.org/works",
+  "query": "search=\"surface tension\" AND (database OR dataset OR ThermoML OR QSPR OR \"machine learning\" OR PC-SAFT OR COSMO-RS) | filter=title_and_abstract.search:\"surface tension\"",
+  "filters": {
+    "sort": "relevance_score:desc",
+    "per-page": 50
+  },
+  "url": "https://api.openalex.org/works?search=%22surface+tension%22+AND+%28database+OR+dataset+OR+ThermoML+OR+QSPR+OR+%22machine+learning%22+OR+PC-SAFT+OR+COSMO-RS%29&filter=title_and_abstract.search%3A%22surface+tension%22&per-page=50&sort=relevance_score%3Adesc&mailto=literature%40interface-db.local",
+  "utc": "2026-09-05T10:30:59.819551+00:00",
+  "http_status": 200,
+  "total_results": 3269,
+  "exported": 50,
+  "operator": "machine_lab_assistant",
+  "strategy_id": "scoping_v0_1",
+  "note": "OpenAlex search+filter. Crossref Boolean totals are not used."
+}

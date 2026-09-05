@@ -1,0 +1,19 @@
+{
+  "search_run_id": "2026W37-S6-COMP-B01",
+  "stream": "S6",
+  "platform": "OpenAlex",
+  "endpoint": "https://api.openalex.org/works",
+  "query": "search=(\"surface tension\" OR \"interfacial tension\" OR wettability) AND (\"molecular dynamics\" OR PC-SAFT OR COSMO-RS OR \"density gradient\") | filter=title_and_abstract.search:\"molecular dynamics\" OR PC-SAFT OR COSMO",
+  "filters": {
+    "sort": "relevance_score:desc",
+    "per-page": 50
+  },
+  "url": "https://api.openalex.org/works?search=%28%22surface+tension%22+OR+%22interfacial+tension%22+OR+wettability%29+AND+%28%22molecular+dynamics%22+OR+PC-SAFT+OR+COSMO-RS+OR+%22density+gradient%22%29&filter=title_and_abstract.search%3A%22molecular+dynamics%22+OR+PC-SAFT+OR+COSMO&per-page=50&sort=relevance_score%3Adesc&mailto=literature%40interface-db.local",
+  "utc": "2026-09-05T10:31:12.764339+00:00",
+  "http_status": 200,
+  "total_results": 16107,
+  "exported": 50,
+  "operator": "machine_lab_assistant",
+  "strategy_id": "scoping_v0_1",
+  "note": "OpenAlex search+filter. Crossref Boolean totals are not used."
+}
