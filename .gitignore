@@ -62,6 +62,14 @@
 *.fls
 *.synctex.gz
 
+# Local paper copies (full text). Track only the DOI lists next to them.
+/papers/**
+!/papers/*.txt
+!/papers/*.md
+!/papers/**/
+!/papers/**/*.txt
+!/papers/**/*.md
+
 # Binary documents and archives should not enter Git accidentally.
 *.pdf
 *.doc

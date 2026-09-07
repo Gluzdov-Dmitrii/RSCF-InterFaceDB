@@ -1,0 +1,297 @@
+Статьи без полного текста у агентов — искать самостоятельно
+========================================================================
+Дата сборки: 2026-09-07
+Репозиторий: D:\RSCF-InterFaceDB
+
+Что это за список
+- Этот агент: literature/searches/runs/2026W37-S7-DRILL-B01 и 2026W37-ALL-LIT-B01.
+- Luna (в этом же репозитории, не отдельный диск): 2026W37-ALL-LIT-A02
+  и 2026W37-S7-MECH-A01. Отдельной соседней папки Luna на D:\ не найдено
+  (проверены D:\archive, D:\LLM DATASETS, D:\dev tests).
+- PDF сложены в соседнюю папку papers\ по темам S1–S7. PDF в Git не входят.
+- DOI ниже проверены по локальным файлам; не выдумывались.
+- Sci-Hub в этой среде дал SSL EOF (0/20 приоритетных DOI).
+- W37-P068 (PLOS protein/membrane MD, 10.1371/journal.pone.0000880) не копировался:
+  off-topic для InterFaceDB.
+
+Локально найдено и скопировано в papers\: 23 файлов
+(включая 1 HTML без DOI: Lysakova 2025 Journal of Mining Institute).
+
+------------------------------------------------------------------------
+ПРИОРИТЕТ 1 — H7 буровые растворы, полный текст недоступен агентам
+------------------------------------------------------------------------
+10.1016/j.molliq.2024.125448
+  Lysakova et al. 2024 J. Mol. Liq. — ближайший WBM-конкурент с CNT; у Luna и здесь только metadata. ScienceDirect/Cloudflare.
+
+10.1016/j.colsurfa.2023.132434
+  Lysakova et al. 2023 ColSurA — SWCNT vs MWCNT в углеводородном DF.
+
+10.1007/s10853-024-09492-w
+  Lysakova et al. 2024 J. Mater. Sci. — MWCNT в OBM, много свойств.
+
+10.3390/en16196875
+  Lysakova et al. 2023 Energies — CC BY, но MDPI PDF дал 403; HTML читали частично. Нужен PDF.
+
+10.1016/j.petrol.2016.01.036
+  Ismail / Aftab 2016 JPSE — generic-performance prior art (MWCNT + nanosilica + glass beads).
+
+10.1115/omae2018-78702
+  Alvi et al. 2018 ASME OMAE — matched -OH/-COOH при фиксированной дозе 0.0095 wt.%.
+
+10.4028/www.scientific.net/MSF.864.189
+  Ismail et al. 2016 Mater. Sci. Forum — fluid loss; в abstract «cake 10 inch» подозрительно.
+
+10.3390/nano13142092
+  Lin et al. 2023 Nanomaterials — OA CC BY, PDF не скачан; MWCNT смешан с CuO.
+
+10.2118/225227-ms
+  Abraham et al. 2025 SPE Oman — SiO2 vs MW-CNT nanomud, OnePetro.
+
+10.1149/2162-8777/abbb9f
+  Ozkan 2020 ECS — гибрид CuO/MWCNT, не MWCNT-only.
+
+10.1080/10916466.2022.2048014
+  Abbas et al. 2022 Pet. Sci. Technol. — swelling inhibition, Taylor & Francis.
+
+10.1016/j.jngse.2019.103082
+  Ma et al. 2020 JNGSE — nano-plugging MWCNT; abstract API не отдал.
+
+10.1016/j.colsurfa.2018.07.058
+  Kazemi-Beydokhti / Hajiabadi 2018 — polymer/CNT WBM rheology.
+
+10.1016/j.powtec.2018.10.016
+  Anoop et al. 2019 Powder Technol. — CNT в WBM, HPHT rheology (Luna SRC0033).
+
+10.1016/j.petrol.2020.107006
+  Sajjadian et al. 2020 JPSE — nanomaterials HP/HT WBM (смешанные добавки).
+
+10.22050/ijogst.2012.2775
+  Sedaghatzadeh 2012 IJOGST — OA на сайте журнала; Crossref 404. Возможный overlap с Fazel 2014.
+
+10.22078/jpst.2016.662
+  Sedaghatzadeh 2016 JPST — OA на сайте; Crossref 404. Возможный overlap 16.67% filtrate.
+
+10.2174/1874834101811010029
+  Tookalloo et al. 2018 Open Pet. Eng. J. — CC BY, PDF не скачан; CNT vs CNT+PEG vs PEG.
+
+10.1016/j.petsci.2021.09.045
+  Liu et al. 2022 Petroleum Science — OA CC BY-NC-ND; Luna SRC0036, PDF не скачан. 180 °C / 10 wt% NaCl.
+
+10.1080/15567036.2020.1854900
+  Sajjadian et al. 2020 Energy Sources — fMWCNT + KCl, trial field test (Luna SRC0038).
+
+10.21597/jist.649505
+  Asker / Ozkan 2020 — TiO2-functionalized MWCNT в WBM, турецкий журнал (Luna SRC0037).
+
+10.30492/ijcce.2018.28219
+  IJCCE 2018 — surface modification CNT vs rheology WBM; Crossref 404, авторы не подтверждены.
+
+10.1063/1.5124631
+  Mohideen et al. 2019 AIP Conf. — MWCNT vs GO: gel vs fluid loss dissociation.
+
+10.1021/acsomega.4c04177
+  Khan et al. 2024 ACS Omega — MWCNT/TiO2 + PAC, RSM filtration.
+
+------------------------------------------------------------------------
+ПРИОРИТЕТ 2 — H5/H6 дисперсия и межфазный слой MWCNT
+------------------------------------------------------------------------
+10.1021/acs.langmuir.5b03189
+  Briggs et al. 2015 Langmuir — MWCNT на oil–water interface / Pickering. Критично для H6. ACS.
+
+10.1016/j.colsurfa.2015.10.027
+  Dresel / Teipel 2016 ColSurA — wetting / surface energy vs MWCNT dispersibility (Luna SRC0028).
+
+10.1021/acs.energyfuels.7b00522
+  Kadhum et al. 2017 Energy Fuels — MWCNT в 10% API brine, polymer steric stabilizer (Luna SRC0032). Не drilling.
+
+10.3390/nano7090262
+  Cui et al. 2017 Nanomaterials — surfactants vs MWCNT-OH aqueous dispersion; OA, Luna не скачала PDF.
+
+10.1098/rsos.190241
+  Li / Qiu 2019 R. Soc. Open Sci. — SDS/TX100 sedimentation, zeta, DLS; OA + Dryad. Luna SRC0030, PDF не скачан.
+
+10.1039/d1ra03780c
+  Abubakr et al. 2021 RSC Adv. — MWCNT nanofluid, aggregate interpretation (Luna SRC0031).
+
+10.1016/j.jssc.2016.10.017
+  AfzaliTabar et al. 2017 — silica nanohybrid Pickering C-EOR; не drilling (Luna SRC0019).
+
+10.1021/nn900493u
+  Bergin et al. 2009 ACS Nano — Hansen parameters для SWCNT; перенос на MWCNT нельзя предполагать (Luna SRC0020).
+
+------------------------------------------------------------------------
+ПРИОРИТЕТ 3 — база данных / ML / IFT (H1–H4), закрытый или OA-сбой
+------------------------------------------------------------------------
+10.1021/acsami.9b22189
+  Kirch et al. 2020 ACS AMI — MD+ML brine–oil IFT; ближайший supplied analogue. ACS.
+
+10.1038/s41598-024-51597-4
+  Yousefmarzi et al. 2024 Sci. Rep. — ML IFT oil/gas и oil/water; Luna A02-S39, Nature PDF не сохранился (HTML).
+
+10.3390/en14113045
+  Rezaei et al. 2021 Energies — IFT CO2–paraffin, ML vs parachor; Luna A02-S41 HTTP 403.
+
+10.3390/ijms11031020
+  Hu et al. 2010 IJMS — QSPR surfactants review; Luna A02-S08 HTTP 403.
+
+10.1063/5.0147052
+  Mohan et al. 2023 JCP — ML surface tension ionic liquids; Luna A02-S42 HTTP 403.
+
+10.1063/1.2038827
+  Gloor et al. 2005 JCP — test-area IFT method; Luna A02-S46 HTTP 403.
+
+10.1021/acs.jced.9b00525
+  Klein et al. 2019 J. Chem. Eng. Data — ST n-alkanes SLS; PMC candidate, Luna A02-S07 не скачала.
+
+10.1021/acsomega.2c03458
+  Lemaoui et al. 2022 ACS Omega — ANN surface tension DES; Luna A02-S06.
+
+10.1021/acs.iecr.1c00783
+  Paduszyński 2021 IEC Res. — IL surface tension QSPR; Luna A02-S09.
+
+10.1021/acs.langmuir.0c01211
+  Qazi et al. 2020 Langmuir — DST surfactants + high salt; Luna A02-S19.
+
+10.1021/acs.jpclett.7b00267
+  Hauner et al. 2017 JPC Lett. — dynamic surface tension of water; Luna A02-S20.
+
+10.1021/la981477f
+  Shin / Abbott 1999 Langmuir — light-controlled DST; нет OA URL (A02-S25).
+
+10.1016/S0001-8686(99)00017-2
+  Eastoe / Dalton 2000 Adv. Colloid Interface Sci. — DST adsorption mechanisms (A02-S26 / W37-A005).
+
+------------------------------------------------------------------------
+Остальные записи Luna ALL-LIT-A02 без локального PDF
+(скрининг include/maybe; полный текст не скачан или 403/HTML)
+------------------------------------------------------------------------
+10.1002/cssc.202000286
+  [A02-S01|S1|maybe|2020] Modeling the Physicochemical Properties of Natural Deep Eutectic Solvents
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1016/j.rser.2018.07.006
+  [A02-S02|S1|include|2018] Current trends in surface tension and wetting behavior of nanofluids
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1029/2009wr008634
+  [A02-S10|S2|include|2010] Water-CO2-mineral systems: Interfacial tension, contact angle, and diffusion—Implications to CO2 geological storage
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1016/j.ejpe.2018.09.006
+  [A02-S11|S2|maybe|2018] Recent advances in application of nanotechnology in chemical enhanced oil recovery: Effects of nanoparticles on wettability alteration, inte
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1063/1.473916
+  [A02-S12|S2|include|1997] Ultralow interfacial tensions in water-n-alkane-surfactant systems
+  access=oa_link_available; Abstract-level screening; repository handle candidate not yet downloaded
+
+10.1016/j.egyr.2022.07.004
+  [A02-S14|S2|include|2022] Wettability of shale-brine-H2 system and H2-brine interfacial tension for assessment of the sealing capacities of shale formations during un
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1016/j.egypro.2009.02.098
+  [A02-S15|S2|include|2009] Dependence of CO2-brine interfacial tension on aquifer pressure, temperature and water salinity
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1016/j.jcis.2012.06.052
+  [A02-S16|S2|include|2012] Molecular dynamics computations of brine-CO2 interfacial tensions and brine-CO2-quartz contact angles and their effects on structural and re
+  access=oa_link_available; No abstract in catalog; full text not verified
+
+10.11575/prism/25807
+  [A02-S18|S2|include|2012] Effect of salinity on the interfacial tension of model and crude oil systems
+  access=oa_link_available; Repository persistent identifier; catalog field is not a DOI; full text not verified
+
+10.1006/jcis.1997.4989
+  [A02-S24|S3|maybe|1997] Influence of Dynamic Surface Tension on the Spreading of Surfactant Solution Droplets Impacting onto a Low-Surface-Energy Solid Substrate
+  access=oa_link_available; No abstract in catalog; full text not verified
+
+10.1002/2014wr015553
+  [A02-S27|S4|include|2014] CO2 wettability of seal and reservoir rocks and the implications for carbon geo-sequestration
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.2118/2504-pa
+  [A02-S28|S4|include|1970] Snap-Off of Oil Droplets in Water-Wet Pores
+  access=oa_link_available; Abstract-level screening; OnePetro rights need verification
+
+10.2118/2338-pa
+  [A02-S29|S4|include|1969] Wettability Determination and Its Effect on Recovery Efficiency
+  access=oa_link_available; Abstract-level screening; OnePetro rights need verification
+
+10.1021/ef5023847
+  [A02-S30|S4|include|2015] Insights into the Mechanism of Wettability Alteration by Low-Salinity Flooding (LSF) in Carbonates
+  access=oa_link_available; Abstract-level screening; repository handle candidate not yet downloaded
+
+10.1016/j.advwatres.2014.02.014
+  [A02-S31|S4|include|2014] Pore-scale contact angle measurements at reservoir conditions using X-ray microtomography
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1680/jsuin.19.00007
+  [A02-S32|S4|maybe|2019] Contact angles: history of over 200 years of open questions
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1016/j.advwatres.2021.103964
+  [A02-S33|S4|include|2021] Contact angle measurement for hydrogen/brine/sandstone system using captive-bubble method relevant for underground hydrogen storage
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1016/j.advwatres.2017.07.018
+  [A02-S34|S4|include|2017] Automatic measurement of contact angle in pore-space images
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1021/acs.jced.2c00707
+  [A02-S35|S5|include|2023] Interfacial Tensions, Solubilities, and Transport Properties of the H2/H2O/NaCl System: A Molecular Simulation Study
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1021/acs.langmuir.3c01424
+  [A02-S36|S5|include|2023] Interfacial Tension-Temperature-Pressure-Salinity Relationship for the Hydrogen-Brine System under Reservoir Conditions: Integration of Mole
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1039/d3cp00322a
+  [A02-S37|S1|maybe|2023] Surface tension models for binary aqueous solutions: a review and intercomparison
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1016/j.jcis.2022.06.034
+  [A02-S38|S1|include|2022] Machine learning hybrid approach for the prediction of surface tension profiles of hydrocarbon surfactants in aqueous solution
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1016/j.ijmst.2019.06.010
+  [A02-S43|S6|include|2019] Effect of different concentrations of surfactant on the wettability of coal by molecular dynamics simulation
+  access=oa_link_available; Abstract-level screening; full text not verified
+
+10.1021/j100138a023
+  [A02-S44|S6|include|1993] A molecular dynamics study of the decane/water interface
+  access=oa_link_available; Abstract-level screening; repository handle candidate not yet downloaded
+
+10.1021/j100381a003
+  [A02-S45|S6|include|1990] Effects of chain length of surfactants on the interfacial tension: molecular dynamics simulations and experiments
+  access=oa_link_available; Abstract-level screening; repository landing page candidate not yet downloaded
+
+10.1063/1.447358
+  [A02-S47|S6|include|1984] A molecular dynamics study of liquid drops
+  access=landing_only; Abstract-level screening; no OA file URL in catalog
+
+10.1063/1.469505
+  [A02-S48|S6|include|1995] Molecular dynamics simulation of the orthobaric densities and surface tension of water
+  access=landing_only; Abstract-level screening; no OA file URL in catalog
+
+10.1063/1.473820
+  [A02-S49|S6|include|1997] Molecular dynamics study of water clusters, liquid, and liquid-vapor interface of water with many-body potentials
+  access=landing_only; Abstract-level screening; no OA file URL in catalog
+
+10.1021/jp048773n
+  [A02-S50|S6|include|2004] Molecular Dynamics Study of a Surfactant-Mediated Decane-Water Interface: Effect of Molecular Architecture of Alkyl Benzene Sulfonate
+  access=landing_only; Abstract-level screening; no OA file URL in catalog
+
+------------------------------------------------------------------------
+Сводка
+------------------------------------------------------------------------
+Скопировано в papers\: 23 файла (22 PDF + 1 HTML без DOI)
+Приоритет 1 (H7 drilling): 24 DOI
+Приоритет 2 (H5/H6 interface): 8 DOI
+Приоритет 3 (ST/IFT/ML): 13 DOI
+Дополнительно Luna A02: 29 DOI/идентификаторов
+Папка papers\S6_MD_vychisleniya пустая: on-topic MD PDF не скачан
+  (W37-P068 protein/membrane исключён). SI к Kadhum 2017 не отдельная статья.
+
+Как класть найденное
+Положите PDF в соответствующую подпапку papers\S*_* и напишите DOI в имени файла.
+Не коммитьте PDF в Git (правило репозитория).

@@ -1,0 +1,94 @@
+Найденные полные тексты в papers\
+========================================================================
+
+S1_poverhnostnoe_natyazhenie\Frenkel_2006_ThermoML_IUPAC_10.1351_pac200678030541.pdf
+  DOI/id: 10.1351/pac200678030541
+  Откуда: этот агент ALL-LIT-B01
+
+S1_poverhnostnoe_natyazhenie\Tanaka_Hack_1996_MRS_metallic_melts_ST_10.1557_s0883769400052180.pdf
+  DOI/id: 10.1557/s0883769400052180
+  Откуда: этот агент ALL-LIT-B01
+
+S1_poverhnostnoe_natyazhenie\Tanaka_1996_molten_alloys_salts_oxides_10.1515_ijmr-1996-870509.pdf
+  DOI/id: 10.1515/ijmr-1996-870509
+  Откуда: Luna ALL-LIT-A02 (дубль W37-P043)
+
+S1_poverhnostnoe_natyazhenie\Lee_2004_Sn_Ag_Cu_surface_tension_10.2320_matertrans.45.2864.pdf
+  DOI/id: 10.2320/matertrans.45.2864
+  Откуда: Luna ALL-LIT-A02
+
+S1_poverhnostnoe_natyazhenie\Hanao_2007_molten_slag_ST_10.2355_isijinternational.47.935.pdf
+  DOI/id: 10.2355/isijinternational.47.935
+  Откуда: Luna ALL-LIT-A02
+
+S2_mezhmolekulyarnoe_IFT\Cheraghian_2016_nano_EOR_IFT_review_10.1007_s40089-015-0173-4.pdf
+  DOI/id: 10.1007/s40089-015-0173-4
+  Откуда: этот агент ALL-LIT-B01 (Luna A02-S13 не скачала PDF)
+
+S2_mezhmolekulyarnoe_IFT\Nielsen_2011_CO2_water_IFT_geo_storage_10.1016_j.gca.2011.12.018.pdf
+  DOI/id: 10.1016/j.gca.2011.12.018
+  Откуда: этот агент ALL-LIT-B01 (Luna A02-S17 не скачала PDF)
+
+S3_dinamicheskoe_natyazhenie\Noziere_2014_aerosol_DST_cloud_10.1038_ncomms4335.pdf
+  DOI/id: 10.1038/ncomms4335
+  Откуда: этот агент ALL-LIT-B01 (Luna A02-S21 получила HTML, не PDF)
+
+S3_dinamicheskoe_natyazhenie\Aytouna_2009_drop_impact_DST_10.1007_s00348-009-0703-9.pdf
+  DOI/id: 10.1007/s00348-009-0703-9
+  Откуда: этот агент ALL-LIT-B01 (Luna A02-S22 получила HTML, не PDF)
+
+S3_dinamicheskoe_natyazhenie\Ritacco_2011_ionic_surfactant_DST_electrostatics_10.1021_la103039v.pdf
+  DOI/id: 10.1021/la103039v
+  Откуда: Luna ALL-LIT-A02 (дубль W37-P054)
+
+S4_smachivaemost\Wettability_calcite_brine_oil_HPHT_10.1021_acs.langmuir.0c00367.pdf
+  DOI/id: 10.1021/acs.langmuir.0c00367
+  Откуда: этот агент ALL-LIT-B01
+
+S4_smachivaemost\Contact_angle_water_film_CO2_clay_MD_10.1021_acs.energyfuels.3c02471.pdf
+  DOI/id: 10.1021/acs.energyfuels.3c02471
+  Откуда: этот агент ALL-LIT-B01
+
+S4_smachivaemost\CO2_water_calcite_wetting_MD_shape_size_10.1021_acs.langmuir.9b02881.pdf
+  DOI/id: 10.1021/acs.langmuir.9b02881
+  Откуда: этот агент ALL-LIT-B01
+
+S5_ML_prognoz\Rashidi-Khaniabadi_2023_IFT_tree_ML_CC-BY_10.1038_s41598-023-37933-0.pdf
+  DOI/id: 10.1038/s41598-023-37933-0
+  Откуда: Luna ALL-LIT-A02
+
+S7_MWCNT_burovye_rastvory\Fazelabdolabadi_2014_fCNT_drilling_fluids_10.1007_s13204-014-0359-5.pdf
+  DOI/id: 10.1007/s13204-014-0359-5
+  Откуда: этот агент + Luna MECH-A01 SRC0034
+
+S7_MWCNT_burovye_rastvory\Aftab_2017_WBM_MWCNT_GNP_nanosilica_10.1016_j.ejpe.2016.05.004.pdf
+  DOI/id: 10.1016/j.ejpe.2016.05.004
+  Откуда: этот агент ALL-LIT-B01
+
+S7_MWCNT_burovye_rastvory\Ismail_2017_MWCNT_SBM_HT_MJFAS_10.11113_mjfas.v12n3.423.pdf
+  DOI/id: 10.11113/mjfas.v12n3.423
+  Откуда: этот агент ALL-LIT-B01 / Luna SRC0040
+
+S7_MWCNT_burovye_rastvory\Alssafar_2019_MWCNT_stick-slip_IJCPE_10.31699_ijcpe.2019.3.6.pdf
+  DOI/id: 10.31699/ijcpe.2019.3.6
+  Откуда: этот агент ALL-LIT-B01
+
+S7_MWCNT_burovye_rastvory\Okoro_2019_MWCNT_filtrate_WBM_OBM_ppb_10.1007_s13202-019-0740-8.pdf
+  DOI/id: 10.1007/s13202-019-0740-8
+  Откуда: этот агент + Luna SRC0035
+
+S7_MWCNT_burovye_rastvory\Hajiabadi_2019_nano_invert_rheology_formation_damage_10.1016_j.petrol.2019.106257.pdf
+  DOI/id: 10.1016/j.petrol.2019.106257
+  Откуда: этот агент ALL-LIT-B01 (ранее S7-B01 помечал inaccessible)
+
+S7_MWCNT_burovye_rastvory\Ismail_2018_IOP_MWCNT_GNP_lubricity_10.1088_1757-899X_380_1_012021.pdf
+  DOI/id: 10.1088/1757-899X/380/1/012021
+  Откуда: этот агент S7-DRILL-B01
+
+S7_MWCNT_burovye_rastvory\Lysakova_2025_Mining_Institute_diesel_nanoadditives_NO-DOI.html
+  DOI/id: NO-DOI https://pmi.spmi.ru/pmi/article/view/16437
+  Откуда: этот агент S7-DRILL-B01 HTML, не PDF
+
+S7_MWCNT_dispersiya_interfeis\Briggs_2018_Pickering_MWCNT_wettability_droplet_size_10.1016_j.colsurfa.2017.10.010.pdf
+  DOI/id: 10.1016/j.colsurfa.2017.10.010
+  Откуда: этот агент ALL-LIT-B01 (S7-B01 сначала inaccessible; Luna SRC0018 abstract-only)
